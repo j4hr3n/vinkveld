@@ -1,21 +1,40 @@
 @import "tailwindcss";
 
 @theme {
-  --color-wine: #722f37;
-  --color-wine-light: #a4434d;
-  --color-wine-dark: #4a1e24;
-  --color-cream: #faf6f1;
-  --color-cream-dark: #f0e8de;
-  --color-text: #2c2c2c;
-  --color-text-light: #666;
-  --color-gold: #c4a35a;
-  --font-serif: "Playfair Display", Georgia, serif;
-  --font-sans: "Inter", system-ui, sans-serif;
+  --color-wine: #5c1a2a;
+  --color-wine-light: #8b3a4a;
+  --color-wine-dark: #3d0f1a;
+  --color-cream: #faf5ee;
+  --color-cream-dark: #ede4d6;
+  --color-cream-mid: #f3ece2;
+  --color-text: #2a2220;
+  --color-text-light: #7a6e68;
+  --color-gold: #b8944f;
+  --color-gold-light: #d4b87a;
+  --color-sage: #8a9a7b;
+  --font-serif: "Fraunces", Georgia, serif;
+  --font-sans: "DM Sans", system-ui, sans-serif;
+  --font-accent: "Cormorant Garamond", Georgia, serif;
 }
 
 @layer base {
   body {
     @apply bg-cream text-text min-h-screen font-sans;
+    background-image:
+      radial-gradient(ellipse at 50% 0%, #faf5ee 0%, #f0e6d6 100%);
+    background-attachment: fixed;
+  }
+
+  /* Grain texture overlay */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.3;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+    background-size: 256px 256px;
   }
 
   h1,
@@ -23,4 +42,69 @@
   h3 {
     @apply font-serif;
   }
+}
+
+/* Staggered entrance animation */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fill-glass {
+  0% { transform: scaleY(0); }
+  100% { transform: scaleY(1); }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.animate-rise-in {
+  animation: rise-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease both;
+}
+
+.animate-toast-in {
+  animation: toast-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
 }

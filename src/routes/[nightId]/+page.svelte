@@ -18,6 +18,7 @@
     let night = $state<WineNight | null | undefined>(undefined);
     let editingWineId = $state<string | null>(null);
     let toastVisible = $state(false);
+    let copied = $state(false);
 
     let formElement = $state<HTMLDivElement | null>(null);
 
@@ -50,7 +51,9 @@
     );
 
     onMount(() => {
-        const unsubscribe = subscribeToNight(nightId, (data) => {
+        const id = nightId;
+        if (!id) return;
+        const unsubscribe = subscribeToNight(id, (data) => {
             night = data;
         });
         return unsubscribe;
@@ -68,8 +71,12 @@
 
     function copyLink() {
         navigator.clipboard.writeText(shareUrl);
+        copied = true;
         toastVisible = true;
-        setTimeout(() => (toastVisible = false), 1500);
+        setTimeout(() => {
+            toastVisible = false;
+            copied = false;
+        }, 1500);
     }
 
     async function handleAdd(data: {
@@ -114,64 +121,138 @@
 </svelte:head>
 
 {#if night === undefined}
-    <div class="text-center p-16 text-text-light">
-        <div
-            class="inline-block w-6 h-6 border-[2.5px] border-cream-dark border-t-wine rounded-full animate-spin mb-2"
-        ></div>
-        <p>Laster vinkveld...</p>
+    <!-- Loading state: wine glass fill animation -->
+    <div class="text-center pt-24 animate-fade-in">
+        <div class="inline-block relative w-12 h-16 mb-4">
+            <svg viewBox="0 0 48 64" fill="none" class="w-full h-full">
+                <path d="M14 4h20l-2 24c-.5 6-4 10-8 10s-7.5-4-8-10L14 4z" stroke="#5c1a2a" stroke-width="1.5" fill="none" opacity="0.2"/>
+                <clipPath id="glass-clip">
+                    <path d="M14 4h20l-2 24c-.5 6-4 10-8 10s-7.5-4-8-10L14 4z"/>
+                </clipPath>
+                <rect x="12" y="4" width="24" height="34" fill="#5c1a2a" opacity="0.15" clip-path="url(#glass-clip)">
+                    <animate attributeName="y" values="38;4" dur="1.5s" repeatCount="indefinite"/>
+                </rect>
+                <line x1="24" y1="38" x2="24" y2="52" stroke="#5c1a2a" stroke-width="1.5" opacity="0.2"/>
+                <line x1="18" y1="52" x2="30" y2="52" stroke="#5c1a2a" stroke-width="1.5" opacity="0.2" stroke-linecap="round"/>
+            </svg>
+        </div>
+        <p class="text-text-light font-accent italic text-lg">Laster vinkveld...</p>
     </div>
 {:else if night === null}
-    <div class="text-center pt-24">
-        <h1 class="text-wine mb-2">Fant ikke vinkveldet</h1>
-        <p>Kanskje lenken er feil?</p>
-        <p><a href="{base}/" class="text-wine">Lag en ny vinkveld</a></p>
+    <div class="text-center pt-20 animate-fade-in">
+        <div class="text-5xl mb-4 opacity-60">🍷</div>
+        <h1 class="text-wine text-2xl mb-3">Fant ikke vinkveldet</h1>
+        <p class="text-text-light mb-4 font-accent italic text-lg">Kanskje lenken er feil?</p>
+        <a
+            href="{base}/"
+            class="inline-flex items-center gap-2 text-wine font-medium no-underline border-b border-dashed border-wine-light pb-0.5 hover:border-solid transition-all duration-200"
+        >
+            Lag en ny vinkveld
+        </a>
     </div>
 {:else}
     <div>
-        <div class="text-center mb-8 pt-8">
-            <h1 class="text-[2.2rem] max-[480px]:text-[1.8rem] text-wine mb-1">
+        <!-- Back link -->
+        <a
+            href="{base}/"
+            class="inline-flex items-center gap-1.5 text-text-light text-[0.82rem] no-underline hover:text-wine transition-colors duration-200 mb-4 animate-fade-in"
+        >
+            <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M10 3L5 8l5 5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Ny vinkveld
+        </a>
+
+        <!-- Header -->
+        <div class="text-center mb-10 pt-4 animate-slide-down">
+            <h1 class="text-[2.4rem] max-[480px]:text-[1.9rem] text-wine mb-1 tracking-tight font-bold leading-tight">
                 {night.title}
             </h1>
-            <div class="text-text-light text-[1.05rem]">
+            <div class="font-accent italic text-text-light text-lg mt-1">
                 {formatDate(night.date)}
             </div>
-            <div
-                class="flex gap-2 items-center justify-center mt-4 max-[480px]:flex-col"
-            >
+        </div>
+
+        <!-- Share section -->
+        <div class="relative bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-cream-dark/50 mb-10 animate-rise-in" style="animation-delay:0.1s">
+            <div class="text-[0.82rem] font-medium text-text-light uppercase tracking-wider mb-3">Del med venner</div>
+            <div class="flex gap-2.5 items-center max-[480px]:flex-col">
                 <input
                     type="text"
                     value={shareUrl}
                     readonly
-                    class="flex-1 max-w-80 max-[480px]:max-w-full py-2 px-3 border-[1.5px] border-cream-dark rounded-lg text-[0.85rem] bg-white text-text-light font-mono"
+                    class="flex-1 max-[480px]:w-full py-2.5 px-3.5 border-[1.5px] border-cream-dark rounded-xl text-[0.82rem] bg-cream/60 text-text-light font-mono truncate"
                 />
                 <button
-                    class="inline-flex items-center gap-2 py-1.5 px-3 border-[1.5px] border-wine-light rounded-lg text-[0.85rem] font-semibold font-[inherit] cursor-pointer transition-all duration-200 bg-transparent text-wine hover:bg-wine hover:text-white"
+                    class="max-[480px]:w-full inline-flex items-center justify-center gap-2 py-2.5 px-5 border-[1.5px] rounded-xl text-[0.85rem] font-semibold font-[inherit] cursor-pointer transition-all duration-300 {copied ? 'border-sage bg-sage/10 text-sage' : 'border-wine/30 bg-transparent text-wine hover:bg-wine hover:text-white hover:border-wine'}"
                     onclick={copyLink}
                 >
-                    Kopier lenke
+                    {#if copied}
+                        <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 8l4 4 6-7" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Kopiert!
+                    {:else}
+                        <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="5" y="5" width="8" height="8" rx="1.5"/>
+                            <path d="M3 11V3h8" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Kopier lenke
+                    {/if}
                 </button>
             </div>
         </div>
 
+        <!-- Wine list -->
         {#if wines.length === 0}
-            <div class="text-center py-12 px-4 text-text-light">
-                <div class="text-5xl mb-2">🍷</div>
-                <p>Ingen viner ennå — legg til den første!</p>
+            <div class="text-center py-16 px-4 animate-rise-in" style="animation-delay:0.2s">
+                <!-- CSS wine glass illustration -->
+                <div class="inline-block relative mb-6">
+                    <svg viewBox="0 0 80 100" class="w-20 h-24 mx-auto" fill="none">
+                        <path d="M24 8h32l-3 36c-.8 8-6 14-13 14s-12.2-6-13-14L24 8z" stroke="#5c1a2a" stroke-width="1.2" opacity="0.15"/>
+                        <path d="M30 20h20l-1.5 18c-.5 5-3.5 9-8.5 9s-8-4-8.5-9L30 20z" fill="#5c1a2a" opacity="0.05"/>
+                        <line x1="40" y1="58" x2="40" y2="78" stroke="#5c1a2a" stroke-width="1.2" opacity="0.15"/>
+                        <line x1="30" y1="78" x2="50" y2="78" stroke="#5c1a2a" stroke-width="1.2" opacity="0.15" stroke-linecap="round"/>
+                        <!-- Decorative drops -->
+                        <circle cx="35" cy="34" r="1.5" fill="#5c1a2a" opacity="0.08"/>
+                        <circle cx="42" cy="30" r="1" fill="#5c1a2a" opacity="0.06"/>
+                        <circle cx="38" cy="38" r="1.2" fill="#5c1a2a" opacity="0.07"/>
+                    </svg>
+                </div>
+                <p class="font-accent italic text-text-light text-lg">Ingen viner ennå</p>
+                <p class="text-text-light text-[0.85rem] mt-1 opacity-70">Legg til den første nedenfor</p>
             </div>
         {:else}
-            <div class="flex flex-col gap-3 mb-8">
-                {#each wines as wine (wine.id)}
+            <!-- Section label -->
+            <div class="flex items-center gap-3 mb-5 animate-fade-in" style="animation-delay:0.15s">
+                <div class="text-[0.82rem] font-medium text-text-light uppercase tracking-wider">
+                    {wines.length} {wines.length === 1 ? "vin" : "viner"}
+                </div>
+                <div class="flex-1 h-px bg-cream-dark"></div>
+            </div>
+
+            <div class="flex flex-col gap-3 mb-10">
+                {#each wines as wine, i (wine.id)}
                     <WineCard
                         {wine}
                         isEditing={editingWineId === wine.id}
                         onEdit={startEdit}
                         onDelete={handleDelete}
+                        index={i}
                     />
                 {/each}
             </div>
         {/if}
 
-        <div bind:this={formElement}>
+        <!-- Divider -->
+        <div class="flex items-center justify-center gap-3 mb-8 animate-fade-in" style="animation-delay:0.25s">
+            <div class="flex-1 h-px bg-cream-dark"></div>
+            <span class="text-cream-dark text-lg">🍇</span>
+            <div class="flex-1 h-px bg-cream-dark"></div>
+        </div>
+
+        <!-- Form -->
+        <div bind:this={formElement} class="animate-rise-in" style="animation-delay:0.3s">
             {#key editingWineId}
                 <WineForm
                     editing={editingWine}
