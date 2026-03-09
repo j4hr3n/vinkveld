@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+@theme {
+  --color-wine: #722f37;
+  --color-wine-light: #a4434d;
+  --color-wine-dark: #4a1e24;
+  --color-cream: #faf6f1;
+  --color-cream-dark: #f0e8de;
+  --color-text: #2c2c2c;
+  --color-text-light: #666;
+  --color-gold: #c4a35a;
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-cream text-text min-h-screen font-sans;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-serif;
+  }
+}

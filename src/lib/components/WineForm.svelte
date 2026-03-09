@@ -68,13 +68,16 @@
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === "Enter") handleSubmit();
   }
+
+  const fieldInputClass = "w-full py-[0.7rem] px-[0.9rem] border-[1.5px] border-cream-dark rounded-lg text-base font-[inherit] transition-colors duration-200 bg-cream focus:outline-none focus:border-wine-light";
+  const fieldLabelClass = "block text-[0.85rem] font-medium text-text-light mb-1.5";
 </script>
 
-<div class="add-wine-form">
-  <h3>{editing ? "Rediger vin" : "Legg til vin"}</h3>
-  <div class="form-row">
-    <div class="field">
-      <label for="wine-name">Vin</label>
+<div class="bg-white rounded-xl p-6 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
+  <h3 class="text-[1.1rem] text-wine mb-5 font-serif">{editing ? "Rediger vin" : "Legg til vin"}</h3>
+  <div class="flex gap-3 max-[480px]:flex-col max-[480px]:gap-0">
+    <div class="flex-1 mb-5">
+      <label for="wine-name" class={fieldLabelClass}>Vin</label>
       <input
         type="text"
         id="wine-name"
@@ -82,31 +85,32 @@
         bind:value={name}
         bind:this={nameInput}
         onkeydown={handleKeydown}
+        class={fieldInputClass}
       />
     </div>
-    <div class="field">
-      <label for="wine-person">Hvem tar med?</label>
+    <div class="flex-1 mb-5">
+      <label for="wine-person" class={fieldLabelClass}>Hvem tar med?</label>
       <input
         type="text"
         id="wine-person"
         placeholder="Ditt navn"
         bind:value={person}
         bind:this={personInput}
+        class={fieldInputClass}
       />
     </div>
   </div>
-  <div class="field">
-    <label>Type</label>
-    <div class="color-picker">
+  <div class="mb-5">
+    <label class={fieldLabelClass}>Type</label>
+    <div class="flex gap-2 flex-wrap">
       {#each COLORS as color}
         <button
           type="button"
-          class="color-option"
-          class:selected={selectedColor === color.id}
+          class="flex items-center gap-[0.35rem] py-[0.35rem] px-[0.65rem] rounded-[20px] border-[1.5px] text-[0.85rem] cursor-pointer transition-all duration-200 font-[inherit] text-inherit {selectedColor === color.id ? 'border-wine bg-white' : 'border-cream-dark bg-cream hover:border-wine-light'}"
           onclick={() => (selectedColor = color.id as Wine["color"])}
         >
           <span
-            class="dot"
+            class="w-[10px] h-[10px] rounded-full"
             style="background:{color.css}{color.border ? `;border:1px solid ${color.border}` : ''}"
           ></span>
           {color.label}
@@ -114,91 +118,37 @@
       {/each}
     </div>
   </div>
-  <div class="field">
-    <label for="wine-link">Lenke (valgfritt)</label>
-    <input type="url" id="wine-link" placeholder="f.eks. https://vivino.com/..." bind:value={link} />
+  <div class="mb-5">
+    <label for="wine-link" class={fieldLabelClass}>Lenke (valgfritt)</label>
+    <input type="url" id="wine-link" placeholder="f.eks. https://vivino.com/..." bind:value={link} class={fieldInputClass} />
   </div>
-  <div class="field">
-    <label for="wine-notes">Notater (valgfritt)</label>
-    <input type="text" id="wine-notes" placeholder="f.eks. Fra kjelleren" bind:value={notes} />
+  <div class="mb-5">
+    <label for="wine-notes" class={fieldLabelClass}>Notater (valgfritt)</label>
+    <input type="text" id="wine-notes" placeholder="f.eks. Fra kjelleren" bind:value={notes} class={fieldInputClass} />
   </div>
   {#if editing}
-    <div class="form-row">
-      <button class="btn btn-primary" onclick={handleSubmit} disabled={submitting}>
+    <div class="flex gap-3">
+      <button
+        class="inline-flex items-center justify-center gap-2 py-3 px-6 border-none rounded-lg text-base font-semibold font-[inherit] cursor-pointer transition-all duration-200 bg-wine text-white w-full hover:bg-wine-dark"
+        onclick={handleSubmit}
+        disabled={submitting}
+      >
         {submitting ? "Lagrer..." : "Lagre endringer"}
       </button>
-      <button class="btn btn-outline" style="width:auto" onclick={onCancel}>Avbryt</button>
+      <button
+        class="inline-flex items-center gap-2 py-3 px-6 border-[1.5px] border-wine-light rounded-lg text-base font-semibold font-[inherit] cursor-pointer transition-all duration-200 bg-transparent text-wine w-auto hover:bg-wine hover:text-white"
+        onclick={onCancel}
+      >
+        Avbryt
+      </button>
     </div>
   {:else}
-    <button class="btn btn-primary" onclick={handleSubmit} disabled={submitting}>
+    <button
+      class="inline-flex items-center justify-center gap-2 py-3 px-6 border-none rounded-lg text-base font-semibold font-[inherit] cursor-pointer transition-all duration-200 bg-wine text-white w-full hover:bg-wine-dark"
+      onclick={handleSubmit}
+      disabled={submitting}
+    >
       {submitting ? "Legger til..." : "Legg til"}
     </button>
   {/if}
 </div>
-
-<style>
-  .add-wine-form {
-    background: white;
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-  }
-
-  .add-wine-form h3 {
-    font-size: 1.1rem;
-    color: var(--wine);
-    margin-bottom: 1.25rem;
-  }
-
-  .form-row {
-    display: flex;
-    gap: 0.75rem;
-  }
-
-  .form-row .field {
-    flex: 1;
-  }
-
-  .color-picker {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
-
-  .color-option {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.35rem 0.65rem;
-    border-radius: 20px;
-    border: 1.5px solid var(--cream-dark);
-    background: var(--cream);
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: inherit;
-    color: inherit;
-  }
-
-  .color-option:hover {
-    border-color: var(--wine-light);
-  }
-
-  .color-option.selected {
-    border-color: var(--wine);
-    background: white;
-  }
-
-  .color-option .dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-  }
-
-  @media (max-width: 480px) {
-    .form-row {
-      flex-direction: column;
-      gap: 0;
-    }
-  }
-</style>

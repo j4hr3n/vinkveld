@@ -12,113 +12,42 @@
     onEdit: (id: string) => void;
     onDelete: (id: string) => void;
   } = $props();
+
+  const dotColors: Record<string, string> = {
+    red: "bg-wine",
+    white: "bg-[#f0e68c] border border-[#d4c84a]",
+    rosé: "bg-[#f4a7b0]",
+    bubbles: "bg-[#e8dcc8] border border-[#c4b89a]",
+  };
+
+  let hasLink = $derived(!!wine.link);
 </script>
 
-<div class="wine-card" class:editing={isEditing}>
-  <div class="wine-dot {wine.color}"></div>
-  <div class="wine-info">
-    <div class="wine-name">
+<div class="group bg-white rounded-xl py-4 px-5 shadow-[0_1px_6px_rgba(0,0,0,0.04)] flex items-start gap-3 {isEditing ? 'border-[1.5px] border-wine-light' : ''}">
+  <div class="w-3 h-3 rounded-full shrink-0 mt-[5px] {dotColors[wine.color] ?? ''}"></div>
+  <div class="flex-1 min-w-0">
+    <div class="font-semibold">
       {#if wine.link}
-        <a href={wine.link} target="_blank" rel="noopener">{wine.name}</a>
+        <a href={wine.link} target="_blank" rel="noopener" class="text-wine no-underline border-b border-dashed border-wine-light pb-0.5 hover:border-solid">{wine.name}</a>
       {:else}
         {wine.name}
       {/if}
     </div>
-    <div class="wine-person">{wine.person}</div>
+    <div class="text-text-light text-[0.9rem] {hasLink ? 'mt-2' : ''}">{wine.person}</div>
     {#if wine.notes}
-      <div class="wine-notes">{wine.notes}</div>
+      <div class="text-text-light text-[0.85rem] italic mt-0.5">{wine.notes}</div>
     {/if}
   </div>
-  <div class="wine-actions">
-    <button class="btn btn-ghost" title="Rediger" onclick={() => onEdit(wine.id)}>✎</button>
-    <button class="btn btn-ghost" title="Slett" onclick={() => onDelete(wine.id)}>&times;</button>
+  <div class="flex shrink-0 opacity-40 transition-opacity duration-200 group-hover:opacity-100">
+    <button
+      class="bg-transparent text-wine-light py-[0.3rem] px-[0.6rem] border-none rounded-lg text-base font-semibold font-[inherit] cursor-pointer transition-all duration-200 hover:bg-wine/8"
+      title="Rediger"
+      onclick={() => onEdit(wine.id)}
+    >✎</button>
+    <button
+      class="bg-transparent text-wine-light py-[0.3rem] px-[0.6rem] border-none rounded-lg text-base font-semibold font-[inherit] cursor-pointer transition-all duration-200 hover:bg-wine/8"
+      title="Slett"
+      onclick={() => onDelete(wine.id)}
+    >&times;</button>
   </div>
 </div>
-
-<style>
-  .wine-card {
-    background: white;
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
-
-  .wine-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    margin-top: 5px;
-  }
-
-  .wine-dot.red {
-    background: #722f37;
-  }
-  .wine-dot.white {
-    background: #f0e68c;
-    border: 1px solid #d4c84a;
-  }
-  .wine-dot.rosé {
-    background: #f4a7b0;
-  }
-  .wine-dot.bubbles {
-    background: #e8dcc8;
-    border: 1px solid #c4b89a;
-  }
-
-  .wine-info {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .wine-name {
-    font-weight: 600;
-    font-size: 1rem;
-  }
-
-  .wine-person {
-    color: var(--text-light);
-    font-size: 0.9rem;
-  }
-
-  .wine-notes {
-    color: var(--text-light);
-    font-size: 0.85rem;
-    font-style: italic;
-    margin-top: 0.2rem;
-  }
-
-  .wine-name a {
-    color: var(--wine);
-    text-decoration: none;
-    border-bottom: 1px dashed var(--wine-light);
-    padding-bottom: 2px;
-  }
-
-  .wine-name a:hover {
-    border-bottom-style: solid;
-  }
-
-  .wine-name:has(a) + .wine-person {
-    margin-top: 8px;
-  }
-
-  .wine-actions {
-    display: flex;
-    gap: 0;
-    flex-shrink: 0;
-    opacity: 0.4;
-    transition: opacity 0.2s;
-  }
-
-  .wine-card:hover .wine-actions {
-    opacity: 1;
-  }
-
-  .wine-card.editing {
-    border: 1.5px solid var(--wine-light);
-  }
-</style>

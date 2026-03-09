@@ -67,7 +67,6 @@
 
   function startEdit(wineId: string) {
     editingWineId = wineId;
-    // Scroll to form after state updates
     setTimeout(() => formElement?.scrollIntoView({ behavior: "smooth" }), 0);
   }
 </script>
@@ -77,34 +76,44 @@
 </svelte:head>
 
 {#if night === undefined}
-  <div class="loading">
-    <div class="spinner"></div>
+  <div class="text-center p-16 text-text-light">
+    <div class="inline-block w-6 h-6 border-[2.5px] border-cream-dark border-t-wine rounded-full animate-spin mb-2"></div>
     <p>Laster vinkveld...</p>
   </div>
 {:else if night === null}
-  <div class="error-page">
-    <h1>Fant ikke vinkveldet</h1>
+  <div class="text-center pt-24">
+    <h1 class="text-wine mb-2">Fant ikke vinkveldet</h1>
     <p>Kanskje lenken er feil?</p>
-    <p><a href="{base}/">Lag et nytt vinkveld</a></p>
+    <p><a href="{base}/" class="text-wine">Lag et nytt vinkveld</a></p>
   </div>
 {:else}
-  <div class="night-page">
-    <div class="night-header">
-      <h1>{night.title}</h1>
-      <div class="date">{formatDate(night.date)}</div>
-      <div class="share-bar">
-        <input type="text" value={shareUrl} readonly />
-        <button class="btn btn-outline btn-small" onclick={copyLink}>Kopier lenke</button>
+  <div>
+    <div class="text-center mb-8 pt-8">
+      <h1 class="text-[2.2rem] max-[480px]:text-[1.8rem] text-wine mb-1">{night.title}</h1>
+      <div class="text-text-light text-[1.05rem]">{formatDate(night.date)}</div>
+      <div class="flex gap-2 items-center justify-center mt-4 max-[480px]:flex-col">
+        <input
+          type="text"
+          value={shareUrl}
+          readonly
+          class="flex-1 max-w-80 max-[480px]:max-w-full py-2 px-3 border-[1.5px] border-cream-dark rounded-lg text-[0.85rem] bg-white text-text-light font-mono"
+        />
+        <button
+          class="inline-flex items-center gap-2 py-1.5 px-3 border-[1.5px] border-wine-light rounded-lg text-[0.85rem] font-semibold font-[inherit] cursor-pointer transition-all duration-200 bg-transparent text-wine hover:bg-wine hover:text-white"
+          onclick={copyLink}
+        >
+          Kopier lenke
+        </button>
       </div>
     </div>
 
     {#if wines.length === 0}
-      <div class="empty-state">
-        <div class="icon">🍷</div>
+      <div class="text-center py-12 px-4 text-text-light">
+        <div class="text-5xl mb-2">🍷</div>
         <p>Ingen viner ennå — legg til den første!</p>
       </div>
     {:else}
-      <div class="wine-list">
+      <div class="flex flex-col gap-3 mb-8">
         {#each wines as wine (wine.id)}
           <WineCard
             {wine}
@@ -129,113 +138,3 @@
 
   <CopiedToast visible={toastVisible} />
 {/if}
-
-<style>
-  .night-header {
-    text-align: center;
-    margin-bottom: 2rem;
-    padding-top: 2rem;
-  }
-
-  .night-header h1 {
-    font-size: 2.2rem;
-    color: var(--wine);
-    margin-bottom: 0.3rem;
-  }
-
-  .date {
-    color: var(--text-light);
-    font-size: 1.05rem;
-  }
-
-  .share-bar {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    justify-content: center;
-    margin-top: 1rem;
-  }
-
-  .share-bar input {
-    flex: 1;
-    max-width: 320px;
-    padding: 0.5rem 0.75rem;
-    border: 1.5px solid var(--cream-dark);
-    border-radius: 8px;
-    font-size: 0.85rem;
-    background: white;
-    color: var(--text-light);
-    font-family: monospace;
-  }
-
-  .wine-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    margin-bottom: 2rem;
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 3rem 1rem;
-    color: var(--text-light);
-  }
-
-  .empty-state .icon {
-    font-size: 3rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .empty-state p {
-    font-size: 1rem;
-  }
-
-  .error-page {
-    text-align: center;
-    padding-top: 6rem;
-  }
-
-  .error-page h1 {
-    color: var(--wine);
-    margin-bottom: 0.5rem;
-  }
-
-  .error-page a {
-    color: var(--wine);
-  }
-
-  .loading {
-    text-align: center;
-    padding: 4rem;
-    color: var(--text-light);
-  }
-
-  .spinner {
-    display: inline-block;
-    width: 24px;
-    height: 24px;
-    border: 2.5px solid var(--cream-dark);
-    border-top-color: var(--wine);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    margin-bottom: 0.5rem;
-  }
-
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  @media (max-width: 480px) {
-    .night-header h1 {
-      font-size: 1.8rem;
-    }
-    .share-bar {
-      flex-direction: column;
-    }
-    .share-bar input {
-      max-width: 100%;
-    }
-  }
-</style>
