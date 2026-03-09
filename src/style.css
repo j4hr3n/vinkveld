@@ -267,8 +267,8 @@ h3 {
   border-bottom-style: solid;
 }
 
-.wine-name:has(a) {
-  margin-bottom: 2px;
+.wine-name:has(a) + .wine-person {
+  margin-top: 4px;
 }
 
 .wine-actions {
