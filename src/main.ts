@@ -121,9 +121,8 @@ function renderNightContent(nightId: string, night: WineNight) {
   const wines = night.wines
     ? Object.entries(night.wines).map(([id, w]) => ({ ...w, id }))
     : [];
-  wines.sort(
-    (a, b) => new Date(a.added).getTime() - new Date(b.added).getTime()
-  );
+  const colorOrder: Record<string, number> = { bubbles: 0, rosé: 1, white: 2, red: 3 };
+  wines.sort((a, b) => (colorOrder[a.color] ?? 99) - (colorOrder[b.color] ?? 99));
 
   const shareUrl = window.location.href;
   const editing = editingWineId
