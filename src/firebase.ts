@@ -5,6 +5,7 @@ import {
   set,
   get,
   push,
+  update,
   remove,
   onValue,
   type DatabaseReference,
@@ -26,9 +27,10 @@ const db = getDatabase(app);
 export interface Wine {
   id?: string;
   name: string;
-  color: "red" | "white" | "rosé" | "orange" | "bubbles";
+  color: "red" | "white" | "rosé" | "bubbles";
   person: string;
   notes: string;
+  link: string;
   added: string;
 }
 
@@ -89,6 +91,14 @@ export async function addWine(
     ...wine,
     added: new Date().toISOString(),
   });
+}
+
+export async function updateWine(
+  nightId: string,
+  wineId: string,
+  wine: Omit<Wine, "id" | "added">
+): Promise<void> {
+  await update(ref(db, `nights/${nightId}/wines/${wineId}`), wine);
 }
 
 export async function removeWine(

@@ -3,6 +3,7 @@ import {
   createNight,
   subscribeToNight,
   addWine,
+  updateWine,
   removeWine,
   type WineNight,
   type Wine,
@@ -19,7 +20,6 @@ const COLORS: readonly {
   { id: "red", label: "Rød", css: "#722f37" },
   { id: "white", label: "Hvit", css: "#f0e68c", border: "#d4c84a" },
   { id: "rosé", label: "Rosé", css: "#f4a7b0" },
-  { id: "orange", label: "Oransje", css: "#e8a856" },
   { id: "bubbles", label: "Bobler", css: "#e8dcc8", border: "#c4b89a" },
 ];
 
@@ -71,12 +71,11 @@ function renderHome() {
   `;
 
   const titleInput = document.getElementById("title") as HTMLInputElement;
-  const dateInput = document.getElementById("date") as HTMLInputElement;
   const createBtn = document.getElementById("create-btn")!;
 
   createBtn.addEventListener("click", async () => {
     const title = titleInput.value.trim();
-    const date = dateInput.value;
+    const date = (document.getElementById("date") as HTMLInputElement).value;
     if (!title) {
       titleInput.focus();
       return;
@@ -94,9 +93,9 @@ function renderHome() {
 
 // --- Night Page ---
 let unsubscribe: (() => void) | null = null;
+let editingWineId: string | null = null;
 
 function renderNight(nightId: string) {
-  // Clean up previous subscription
   if (unsubscribe) {
     unsubscribe();
     unsubscribe = null;
@@ -127,14 +126,9 @@ function renderNightContent(nightId: string, night: WineNight) {
   );
 
   const shareUrl = window.location.href;
-
-  // Group by person
-  const byPerson = new Map<string, (Wine & { id: string })[]>();
-  for (const w of wines) {
-    const list = byPerson.get(w.person) || [];
-    list.push(w);
-    byPerson.set(w.person, list);
-  }
+  const editing = editingWineId
+    ? wines.find((w) => w.id === editingWineId)
+    : null;
 
   app.innerHTML = `
     <div class="night-page">
@@ -160,14 +154,17 @@ function renderNightContent(nightId: string, night: WineNight) {
           ${wines
             .map(
               (w) => `
-            <div class="wine-card">
+            <div class="wine-card${editingWineId === w.id ? " editing" : ""}">
               <div class="wine-dot ${w.color}"></div>
               <div class="wine-info">
-                <div class="wine-name">${escapeHtml(w.name)}</div>
+                <div class="wine-name">${w.link ? `<a href="${escapeAttr(w.link)}" target="_blank" rel="noopener">${escapeHtml(w.name)}</a>` : escapeHtml(w.name)}</div>
                 <div class="wine-person">${escapeHtml(w.person)}</div>
                 ${w.notes ? `<div class="wine-notes">${escapeHtml(w.notes)}</div>` : ""}
               </div>
-              <button class="btn btn-ghost delete-wine" data-id="${w.id}">&times;</button>
+              <div class="wine-actions">
+                <button class="btn btn-ghost edit-wine" data-id="${w.id}" title="Rediger">✎</button>
+                <button class="btn btn-ghost delete-wine" data-id="${w.id}" title="Slett">&times;</button>
+              </div>
             </div>
           `
             )
@@ -177,15 +174,15 @@ function renderNightContent(nightId: string, night: WineNight) {
       }
 
       <div class="add-wine-form">
-        <h3>Legg til vin</h3>
+        <h3>${editing ? "Rediger vin" : "Legg til vin"}</h3>
         <div class="form-row">
           <div class="field">
             <label for="wine-name">Vin</label>
-            <input type="text" id="wine-name" placeholder="f.eks. Barolo 2019" />
+            <input type="text" id="wine-name" placeholder="f.eks. Barolo 2019" value="${editing ? escapeAttr(editing.name) : ""}" />
           </div>
           <div class="field">
             <label for="wine-person">Hvem tar med?</label>
-            <input type="text" id="wine-person" placeholder="Ditt navn" />
+            <input type="text" id="wine-person" placeholder="Ditt navn" value="${editing ? escapeAttr(editing.person) : ""}" />
           </div>
         </div>
         <div class="field">
@@ -193,7 +190,7 @@ function renderNightContent(nightId: string, night: WineNight) {
           <div class="color-picker" id="color-picker">
             ${COLORS.map(
               (c) => `
-              <div class="color-option${c.id === "red" ? " selected" : ""}" data-color="${c.id}">
+              <div class="color-option${c.id === (editing ? editing.color : "red") ? " selected" : ""}" data-color="${c.id}">
                 <span class="dot" style="background:${c.css}${c.border ? `;border:1px solid ${c.border}` : ""}"></span>
                 ${c.label}
               </div>
@@ -202,10 +199,23 @@ function renderNightContent(nightId: string, night: WineNight) {
           </div>
         </div>
         <div class="field">
-          <label for="wine-notes">Notater (valgfritt)</label>
-          <input type="text" id="wine-notes" placeholder="f.eks. Fra kjelleren" />
+          <label for="wine-link">Lenke (valgfritt)</label>
+          <input type="url" id="wine-link" placeholder="f.eks. https://vivino.com/..." value="${editing?.link ? escapeAttr(editing.link) : ""}" />
         </div>
-        <button class="btn btn-primary" id="add-wine-btn">Legg til</button>
+        <div class="field">
+          <label for="wine-notes">Notater (valgfritt)</label>
+          <input type="text" id="wine-notes" placeholder="f.eks. Fra kjelleren" value="${editing ? escapeAttr(editing.notes || "") : ""}" />
+        </div>
+        ${
+          editing
+            ? `
+          <div class="form-row">
+            <button class="btn btn-primary" id="save-wine-btn">Lagre endringer</button>
+            <button class="btn btn-outline" id="cancel-edit-btn" style="width:auto">Avbryt</button>
+          </div>
+        `
+            : `<button class="btn btn-primary" id="add-wine-btn">Legg til</button>`
+        }
       </div>
     </div>
     <div class="copied-toast" id="toast">Lenke kopiert!</div>
@@ -215,8 +225,10 @@ function renderNightContent(nightId: string, night: WineNight) {
   const personInput = document.getElementById(
     "wine-person"
   ) as HTMLInputElement;
-  const savedName = localStorage.getItem("vinkveld-name");
-  if (savedName) personInput.value = savedName;
+  if (!editing) {
+    const savedName = localStorage.getItem("vinkveld-name");
+    if (savedName) personInput.value = savedName;
+  }
 
   // Copy URL
   document.getElementById("copy-btn")!.addEventListener("click", () => {
@@ -229,7 +241,7 @@ function renderNightContent(nightId: string, night: WineNight) {
   });
 
   // Color picker
-  let selectedColor = "red";
+  let selectedColor: Wine["color"] = editing ? editing.color : "red";
   document.getElementById("color-picker")!.addEventListener("click", (e) => {
     const option = (e.target as HTMLElement).closest(
       ".color-option"
@@ -239,51 +251,102 @@ function renderNightContent(nightId: string, night: WineNight) {
       .querySelectorAll(".color-option")
       .forEach((el) => el.classList.remove("selected"));
     option.classList.add("selected");
-    selectedColor = option.dataset.color!;
+    selectedColor = option.dataset.color! as Wine["color"];
   });
 
-  // Add wine
-  const addBtn = document.getElementById("add-wine-btn")!;
-  const nameInput = document.getElementById("wine-name") as HTMLInputElement;
-
-  async function handleAdd() {
-    const name = nameInput.value.trim();
+  function getFormValues() {
+    const name = (
+      document.getElementById("wine-name") as HTMLInputElement
+    ).value.trim();
     const person = personInput.value.trim();
-    if (!name) {
-      nameInput.focus();
-      return;
-    }
-    if (!person) {
-      personInput.focus();
-      return;
-    }
-    localStorage.setItem("vinkveld-name", person);
-    addBtn.textContent = "Legger til...";
-    (addBtn as HTMLButtonElement).disabled = true;
+    const link = (
+      document.getElementById("wine-link") as HTMLInputElement
+    ).value.trim();
     const notes = (
       document.getElementById("wine-notes") as HTMLInputElement
     ).value.trim();
-    await addWine(nightId, {
-      name,
-      person,
-      color: selectedColor as Wine["color"],
-      notes,
-    });
-    // The subscription will re-render the page
+    return { name, person, link, notes, color: selectedColor };
   }
 
-  addBtn.addEventListener("click", handleAdd);
-  nameInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") handleAdd();
+  if (editing) {
+    // Save edit
+    const saveBtn = document.getElementById("save-wine-btn")!;
+    saveBtn.addEventListener("click", async () => {
+      const { name, person, link, notes, color } = getFormValues();
+      if (!name) {
+        (document.getElementById("wine-name") as HTMLInputElement).focus();
+        return;
+      }
+      if (!person) {
+        personInput.focus();
+        return;
+      }
+      localStorage.setItem("vinkveld-name", person);
+      saveBtn.textContent = "Lagrer...";
+      (saveBtn as HTMLButtonElement).disabled = true;
+      await updateWine(nightId, editingWineId!, {
+        name,
+        person,
+        color,
+        link,
+        notes,
+      });
+      editingWineId = null;
+    });
+
+    // Cancel edit
+    document.getElementById("cancel-edit-btn")!.addEventListener("click", () => {
+      editingWineId = null;
+      renderNightContent(nightId, night);
+    });
+  } else {
+    // Add wine
+    const addBtn = document.getElementById("add-wine-btn")!;
+    const nameInput = document.getElementById("wine-name") as HTMLInputElement;
+
+    async function handleAdd() {
+      const { name, person, link, notes, color } = getFormValues();
+      if (!name) {
+        (document.getElementById("wine-name") as HTMLInputElement).focus();
+        return;
+      }
+      if (!person) {
+        personInput.focus();
+        return;
+      }
+      localStorage.setItem("vinkveld-name", person);
+      addBtn.textContent = "Legger til...";
+      (addBtn as HTMLButtonElement).disabled = true;
+      await addWine(nightId, { name, person, color, link, notes });
+    }
+
+    addBtn.addEventListener("click", handleAdd);
+    nameInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") handleAdd();
+    });
+  }
+
+  // Edit wine
+  document.querySelectorAll(".edit-wine").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      editingWineId = (btn as HTMLElement).dataset.id!;
+      renderNightContent(nightId, night);
+    });
   });
 
   // Delete wine
   document.querySelectorAll(".delete-wine").forEach((btn) => {
     btn.addEventListener("click", () => {
       const wineId = (btn as HTMLElement).dataset.id!;
+      if (editingWineId === wineId) editingWineId = null;
       removeWine(nightId, wineId);
     });
   });
+
+  // Scroll to form if editing
+  if (editing) {
+    document.querySelector(".add-wine-form")?.scrollIntoView({ behavior: "smooth" });
+  }
 }
 
 function renderNotFound() {
@@ -302,12 +365,22 @@ function escapeHtml(str: string): string {
   return div.innerHTML;
 }
 
+function escapeAttr(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 // --- Router ---
 function route() {
   if (unsubscribe) {
     unsubscribe();
     unsubscribe = null;
   }
+  editingWineId = null;
 
   const { page, id } = getRoute();
   switch (page) {

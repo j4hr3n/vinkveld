@@ -232,7 +232,6 @@ h3 {
 .wine-dot.red { background: #722f37; }
 .wine-dot.white { background: #f0e68c; border: 1px solid #d4c84a; }
 .wine-dot.rosé { background: #f4a7b0; }
-.wine-dot.orange { background: #e8a856; }
 .wine-dot.bubbles { background: #e8dcc8; border: 1px solid #c4b89a; }
 
 .wine-info {
@@ -257,15 +256,30 @@ h3 {
   margin-top: 0.2rem;
 }
 
-.wine-card .btn-ghost {
+.wine-name a {
+  color: var(--wine);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--wine-light);
+}
+
+.wine-name a:hover {
+  border-bottom-style: solid;
+}
+
+.wine-actions {
+  display: flex;
+  gap: 0;
   flex-shrink: 0;
-  font-size: 1rem;
   opacity: 0.4;
   transition: opacity 0.2s;
 }
 
-.wine-card:hover .btn-ghost {
+.wine-card:hover .wine-actions {
   opacity: 1;
+}
+
+.wine-card.editing {
+  border: 1.5px solid var(--wine-light);
 }
 
 /* Add wine form */
