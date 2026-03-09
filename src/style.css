@@ -268,7 +268,7 @@ h3 {
 }
 
 .wine-name:has(a) + .wine-person {
-  margin-top: 4px;
+  margin-top: 8px;
 }
 
 .wine-actions {
