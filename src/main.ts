@@ -284,14 +284,15 @@ function renderNightContent(nightId: string, night: WineNight) {
       localStorage.setItem("vinkveld-name", person);
       saveBtn.textContent = "Lagrer...";
       (saveBtn as HTMLButtonElement).disabled = true;
-      await updateWine(nightId, editingWineId!, {
+      const wineId = editingWineId!;
+      editingWineId = null;
+      await updateWine(nightId, wineId, {
         name,
         person,
         color,
         link,
         notes,
       });
-      editingWineId = null;
     });
 
     // Cancel edit
