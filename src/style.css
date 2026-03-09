@@ -260,10 +260,15 @@ h3 {
   color: var(--wine);
   text-decoration: none;
   border-bottom: 1px dashed var(--wine-light);
+  padding-bottom: 2px;
 }
 
 .wine-name a:hover {
   border-bottom-style: solid;
+}
+
+.wine-name:has(a) {
+  margin-bottom: 2px;
 }
 
 .wine-actions {
