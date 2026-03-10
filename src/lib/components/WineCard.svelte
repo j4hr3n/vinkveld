@@ -85,13 +85,13 @@
     <div class="flex shrink-0 items-center gap-2 animate-fade-in">
       <span class="text-[0.8rem] text-text-light whitespace-nowrap">Slette?</span>
       <button
-        class="bg-red-500 text-white px-3 py-1 border-none rounded-lg text-[0.78rem] font-medium cursor-pointer transition-all duration-200 hover:bg-red-600"
+        class="bg-wine-dark text-white/90 px-3 py-1 border-none rounded-lg text-[0.78rem] font-medium cursor-pointer transition-all duration-200 hover:bg-wine-dark/90 hover:text-white"
         onclick={() => onDelete(wine.id)}
       >
         Slett
       </button>
       <button
-        class="bg-cream-dark text-text-light px-3 py-1 border-none rounded-lg text-[0.78rem] font-medium cursor-pointer transition-all duration-200 hover:bg-cream-mid hover:text-text"
+        class="bg-cream-dark/60 text-text-light px-3 py-1 border-none rounded-lg text-[0.78rem] font-medium cursor-pointer transition-all duration-200 hover:bg-cream-dark hover:text-text"
         onclick={() => (confirmingDelete = false)}
       >
         Avbryt
@@ -109,7 +109,7 @@
         </svg>
       </button>
       <button
-        class="bg-transparent text-text-light p-2 border-none rounded-lg text-sm cursor-pointer transition-all duration-200 hover:bg-red-50 hover:text-red-500"
+        class="bg-transparent text-text-light p-2 border-none rounded-lg text-sm cursor-pointer transition-all duration-200 hover:bg-wine/8 hover:text-wine"
         title="Slett"
         onclick={() => (confirmingDelete = true)}
       >
