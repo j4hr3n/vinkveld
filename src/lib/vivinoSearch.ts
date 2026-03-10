@@ -29,6 +29,10 @@ const MAX_SUGGESTIONS = 8;
 const MAX_VINTAGES_PER_HIT = 5;
 
 export async function searchWines(query: string): Promise<WineSuggestion[]> {
+	const queryYear = extractYear(query);
+	const nameQuery = queryYear != null ? query.replace(/\b(19|20)\d{2}\b/, "").trim() : query;
+	const isYearOnly = queryYear != null && nameQuery === "";
+
 	const res = await fetch(ENDPOINT, {
 		method: "POST",
 		headers: {
@@ -37,15 +41,14 @@ export async function searchWines(query: string): Promise<WineSuggestion[]> {
 			"Content-Type": "application/json",
 		},
 		body: JSON.stringify({
-			query,
-			hitsPerPage: 4,
+			query: isYearOnly ? "" : nameQuery,
+			hitsPerPage: isYearOnly ? 20 : 4,
 		}),
 	});
 
 	if (!res.ok) return [];
 
 	const data = await res.json();
-	const queryYear = extractYear(query);
 	const suggestions: WineSuggestion[] = [];
 
 	for (const hit of data.hits as AlgoliaHit[]) {
@@ -57,7 +60,13 @@ export async function searchWines(query: string): Promise<WineSuggestion[]> {
 			typeId: hit.type_id,
 		};
 
-		if (vintages.length === 0) {
+		if (queryYear != null) {
+			// Year in query: only show that specific vintage
+			const match = vintages.find((v) => v.year === queryYear);
+			if (match) {
+				suggestions.push({ ...base, vintage: match.year, rating: match.rating });
+			}
+		} else if (vintages.length === 0) {
 			suggestions.push({
 				...base,
 				rating: hit.statistics?.ratings_average,
@@ -98,12 +107,11 @@ function getNotableVintages(
 		}))
 		.filter((v) => !isNaN(v.year) && v.year <= currentYear && v.count >= MIN_RATINGS);
 
-	// If user typed a year, put that first if it exists
-	if (queryYear != null) {
-		const exact = parsed.find((v) => v.year === queryYear);
-		const rest = parsed.filter((v) => v.year !== queryYear).slice(0, MAX_VINTAGES_PER_HIT - 1);
-		if (exact) return [exact, ...rest];
-	}
+	// Sort by year descending (latest vintage first)
+	parsed.sort((a, b) => b.year - a.year);
+
+	// When filtering by year, return all parsed vintages so the caller can find the match
+	if (queryYear != null) return parsed;
 
 	return parsed.slice(0, MAX_VINTAGES_PER_HIT);
 }
