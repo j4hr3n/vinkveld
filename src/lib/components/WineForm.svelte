@@ -2,7 +2,7 @@
     import type { Wine } from "$lib/firebase";
     import { getUserName, setUserName } from "$lib/identity";
     import { stripeColors } from "$lib/colors";
-    import WineAutocomplete from "./WineAutocomplete.svelte";
+    import WineSearchModal from "./WineSearchModal.svelte";
     import { vivinoTypeToColor, type WineSuggestion } from "$lib/vivinoSearch";
 
     const COLORS: readonly {
@@ -38,6 +38,7 @@
     let link = $state(editing?.link ?? "");
     let notes = $state(editing?.notes ?? "");
     let submitting = $state(false);
+    let searchOpen = $state(false);
 
     let nameInput = $state<HTMLInputElement | null>(null);
     let personInput = $state<HTMLInputElement | null>(null);
@@ -105,16 +106,29 @@
 
     <div class="flex gap-4 max-[480px]:flex-col max-[480px]:gap-0">
         <div class="flex-[2] mb-5">
-            <label for="wine-name" class={fieldLabelClass}>Vin</label>
-            <WineAutocomplete
-                id="wine-name"
-                placeholder="f.eks. Barolo 2019"
-                bind:value={name}
-                bind:inputRef={nameInput}
-                onkeydown={handleKeydown}
-                onSelect={handleWineSelect}
-                inputClass={fieldInputClass}
-            />
+            <label class={fieldLabelClass}>Vin</label>
+            <div class="flex gap-2">
+                <input
+                    type="text"
+                    id="wine-name"
+                    placeholder="Skriv inn vinnavn"
+                    bind:value={name}
+                    bind:this={nameInput}
+                    onkeydown={handleKeydown}
+                    class="{fieldInputClass} flex-1"
+                />
+                <button
+                    type="button"
+                    onclick={() => (searchOpen = true)}
+                    class="shrink-0 px-3.5 border-[1.5px] border-cream-dark rounded-xl cursor-pointer transition-all duration-300 bg-cream/60 hover:border-wine-light hover:bg-white hover:shadow-[0_0_0_3px_rgba(92,26,42,0.06)] text-text-light hover:text-wine"
+                    title="Søk etter vin"
+                >
+                    <svg class="w-[18px] h-[18px]" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <circle cx="7.5" cy="7.5" r="5.5" />
+                        <path d="M12 12l4 4" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
         </div>
         <div class="flex-1 mb-5">
             <label for="wine-person" class={fieldLabelClass}
@@ -223,3 +237,8 @@
         </button>
     {/if}
 </div>
+
+<WineSearchModal
+    bind:open={searchOpen}
+    onSelect={handleWineSelect}
+/>
