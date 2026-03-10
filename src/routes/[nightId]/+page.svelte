@@ -85,6 +85,10 @@
         }, 1500);
     }
 
+    function errorMsg(err: unknown, fallback: string): string {
+        return err instanceof Error && err.message ? err.message : fallback;
+    }
+
     async function handleAdd(data: {
         name: string;
         person: string;
@@ -94,8 +98,9 @@
     }) {
         try {
             await addWine(nightId!, data);
-        } catch {
-            showError("Kunne ikke lagre vinen");
+        } catch (err) {
+            showError(errorMsg(err, "Kunne ikke lagre vinen"));
+            throw err;
         }
     }
 
@@ -111,8 +116,9 @@
         editingWineId = null;
         try {
             await updateWine(nightId!, wineId, data);
-        } catch {
-            showError("Kunne ikke oppdatere vinen");
+        } catch (err) {
+            showError(errorMsg(err, "Kunne ikke oppdatere vinen"));
+            throw err;
         }
     }
 
@@ -120,8 +126,8 @@
         if (editingWineId === wineId) editingWineId = null;
         try {
             await removeWine(nightId!, wineId);
-        } catch {
-            showError("Kunne ikke slette vinen");
+        } catch (err) {
+            showError(errorMsg(err, "Kunne ikke slette vinen"));
         }
     }
 

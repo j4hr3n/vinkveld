@@ -31,8 +31,12 @@
         try {
             const id = await createNight(title.trim(), date);
             goto(`${base}/${id}`);
-        } catch {
-            showError("Kunne ikke opprette vinkvelden");
+        } catch (err) {
+            showError(
+                err instanceof Error && err.message
+                    ? err.message
+                    : "Kunne ikke opprette vinkvelden",
+            );
             creating = false;
         }
     }
