@@ -14,7 +14,7 @@ const ENDPOINT = `https://${ALGOLIA_APP_ID}-dsn.algolia.net/1/indexes/${ALGOLIA_
 
 interface AlgoliaHit {
 	name: string;
-	vintages?: { year: number }[];
+	vintages?: { year: string }[];
 	type_id?: number;
 	region?: { name: string };
 	winery?: { name: string };
@@ -40,12 +40,21 @@ export async function searchWines(query: string): Promise<WineSuggestion[]> {
 	const data = await res.json();
 	return (data.hits as AlgoliaHit[]).map((hit) => ({
 		name: hit.name,
-		vintage: hit.vintages?.[0]?.year,
+		vintage: parseVintage(hit.vintages),
 		winery: hit.winery?.name,
 		region: hit.region?.name,
 		rating: hit.statistics?.ratings_average,
 		typeId: hit.type_id,
 	}));
+}
+
+function parseVintage(vintages: AlgoliaHit["vintages"]): number | undefined {
+	if (!vintages) return undefined;
+	for (const v of vintages) {
+		const year = parseInt(v.year, 10);
+		if (!isNaN(year) && year > 1900) return year;
+	}
+	return undefined;
 }
 
 const TYPE_MAP: Record<number, string> = {
