@@ -60,19 +60,25 @@
         }
         submitting = true;
         setUserName(person);
-        await onSubmit({
-            name: name.trim(),
-            person: person.trim(),
-            color: selectedColor,
-            link: link.trim(),
-            notes: notes.trim(),
-        });
-        if (!editing) {
-            name = "";
-            link = "";
-            notes = "";
+        try {
+            await onSubmit({
+                name: name.trim(),
+                person: person.trim(),
+                color: selectedColor,
+                link: link.trim(),
+                notes: notes.trim(),
+            });
+            if (!editing) {
+                name = "";
+                link = "";
+                notes = "";
+            }
+        } catch {
+            // Error is handled by the parent via showError;
+            // form fields are preserved so the user can retry.
+        } finally {
+            submitting = false;
         }
-        submitting = false;
     }
 
     function handleWineSelect(s: WineSuggestion) {

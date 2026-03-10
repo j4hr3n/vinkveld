@@ -22,6 +22,35 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+const WRITE_TIMEOUT_MS = 8000;
+
+class OfflineError extends Error {
+  constructor() {
+    super("Du ser ut til å være frakoblet. Sjekk internettforbindelsen.");
+    this.name = "OfflineError";
+  }
+}
+
+class TimeoutError extends Error {
+  constructor() {
+    super("Handlingen tok for lang tid. Sjekk internettforbindelsen og prøv igjen.");
+    this.name = "TimeoutError";
+  }
+}
+
+function withTimeout<T>(promise: Promise<T>, ms = WRITE_TIMEOUT_MS): Promise<T> {
+  if (typeof navigator !== "undefined" && !navigator.onLine) {
+    return Promise.reject(new OfflineError());
+  }
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new TimeoutError()), ms);
+    promise.then(
+      (val) => { clearTimeout(timer); resolve(val); },
+      (err) => { clearTimeout(timer); reject(err); },
+    );
+  });
+}
+
 export interface Wine {
   id?: string;
   name: string;
@@ -51,7 +80,7 @@ export async function createNight(
     date,
     created: new Date().toISOString(),
   };
-  await set(newRef, night);
+  await withTimeout(set(newRef, night));
   return newRef.key!;
 }
 
@@ -75,10 +104,10 @@ export async function addWine(
 ): Promise<void> {
   const winesRef = ref(db, `nights/${nightId}/wines`);
   const newRef = push(winesRef);
-  await set(newRef, {
+  await withTimeout(set(newRef, {
     ...wine,
     added: new Date().toISOString(),
-  });
+  }));
 }
 
 export async function updateWine(
@@ -86,13 +115,13 @@ export async function updateWine(
   wineId: string,
   wine: Omit<Wine, "id" | "added">
 ): Promise<void> {
-  await update(ref(db, `nights/${nightId}/wines/${wineId}`), wine);
+  await withTimeout(update(ref(db, `nights/${nightId}/wines/${wineId}`), wine));
 }
 
 export async function removeWine(
   nightId: string,
   wineId: string
 ): Promise<void> {
-  await remove(ref(db, `nights/${nightId}/wines/${wineId}`));
+  await withTimeout(remove(ref(db, `nights/${nightId}/wines/${wineId}`)));
 }
 

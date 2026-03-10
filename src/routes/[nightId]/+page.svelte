@@ -13,11 +13,24 @@
     import WineCard from "$lib/components/WineCard.svelte";
     import WineForm from "$lib/components/WineForm.svelte";
     import CopiedToast from "$lib/components/CopiedToast.svelte";
+    import ErrorToast from "$lib/components/ErrorToast.svelte";
 
     let nightId = $derived(page.params.nightId);
     let night = $state<WineNight | null | undefined>(undefined);
     let editingWineId = $state<string | null>(null);
     let toastVisible = $state(false);
+    let errorMessage = $state("");
+    let errorVisible = $state(false);
+    let errorTimeout: ReturnType<typeof setTimeout> | undefined;
+
+    function showError(message: string) {
+        clearTimeout(errorTimeout);
+        errorMessage = message;
+        errorVisible = true;
+        errorTimeout = setTimeout(() => {
+            errorVisible = false;
+        }, 3000);
+    }
 
     let formElement = $state<HTMLDivElement | null>(null);
 
@@ -72,6 +85,10 @@
         }, 1500);
     }
 
+    function errorMsg(err: unknown, fallback: string): string {
+        return err instanceof Error && err.message ? err.message : fallback;
+    }
+
     async function handleAdd(data: {
         name: string;
         person: string;
@@ -79,7 +96,12 @@
         link: string;
         notes: string;
     }) {
-        await addWine(nightId!, data);
+        try {
+            await addWine(nightId!, data);
+        } catch (err) {
+            showError(errorMsg(err, "Kunne ikke lagre vinen"));
+            throw err;
+        }
     }
 
     async function handleEdit(data: {
@@ -92,12 +114,21 @@
         if (!editingWineId) return;
         const wineId = editingWineId;
         editingWineId = null;
-        await updateWine(nightId!, wineId, data);
+        try {
+            await updateWine(nightId!, wineId, data);
+        } catch (err) {
+            showError(errorMsg(err, "Kunne ikke oppdatere vinen"));
+            throw err;
+        }
     }
 
-    function handleDelete(wineId: string) {
+    async function handleDelete(wineId: string) {
         if (editingWineId === wineId) editingWineId = null;
-        removeWine(nightId!, wineId);
+        try {
+            await removeWine(nightId!, wineId);
+        } catch (err) {
+            showError(errorMsg(err, "Kunne ikke slette vinen"));
+        }
     }
 
     function startEdit(wineId: string) {
@@ -363,4 +394,5 @@
     </div>
 
     <CopiedToast visible={toastVisible} />
+    <ErrorToast message={errorMessage} visible={errorVisible} />
 {/if}
