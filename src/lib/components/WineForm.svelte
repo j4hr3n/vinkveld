@@ -1,17 +1,17 @@
 <script lang="ts">
     import type { Wine } from "$lib/firebase";
     import { getUserName, setUserName } from "$lib/identity";
+    import { stripeColors } from "$lib/colors";
 
     const COLORS: readonly {
         id: string;
         label: string;
-        css: string;
         border?: string;
     }[] = [
-        { id: "red", label: "Rød", css: "#5c1a2a" },
-        { id: "white", label: "Hvit", css: "#e8dd8a", border: "#c8bc5a" },
-        { id: "rosé", label: "Rosé", css: "#e8909a" },
-        { id: "bubbles", label: "Bobler", css: "#d4c8a8", border: "#b8ac8a" },
+        { id: "red", label: "Rød" },
+        { id: "white", label: "Hvit", border: "#c8bc5a" },
+        { id: "rosé", label: "Rosé" },
+        { id: "bubbles", label: "Bobler", border: "#b8ac8a" },
     ];
 
     let {
@@ -139,7 +139,7 @@
                         color.id
                             ? 'scale-110'
                             : ''}"
-                        style="background:{color.css}{color.border
+                        style="background:{stripeColors[color.id]}{color.border
                             ? `;border:1.5px solid ${color.border}`
                             : ''}{selectedColor === color.id
                             ? ';box-shadow:0 2px 6px rgba(0,0,0,0.15)'

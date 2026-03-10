@@ -44,10 +44,7 @@
 >
     <h2 class="text-xl text-wine mb-6 font-semibold">Ny vinkveld</h2>
 
-    <!-- Decorative top accent -->
-    <div class="absolute top-0 left-8 right-8 h-[2px] rounded-full bg-gradient-to-r from-transparent via-wine/20 to-transparent"></div>
-
-    <div class="mb-5 group">
+    <div class="mb-5">
         <label
             for="title"
             class="block text-[0.82rem] font-medium text-text-light mb-2 uppercase tracking-wider"

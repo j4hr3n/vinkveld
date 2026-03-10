@@ -7,7 +7,6 @@ import {
   update,
   remove,
   onValue,
-  type DatabaseReference,
 } from "firebase/database";
 
 const firebaseConfig = {
@@ -41,10 +40,6 @@ export interface WineNight {
   wines?: Record<string, Wine>;
 }
 
-function nightRef(nightId: string): DatabaseReference {
-  return ref(db, `nights/${nightId}`);
-}
-
 export async function createNight(
   title: string,
   date: string
@@ -64,7 +59,7 @@ export function subscribeToNight(
   nightId: string,
   callback: (night: WineNight | null) => void
 ): () => void {
-  const unsubscribe = onValue(nightRef(nightId), (snapshot) => {
+  const unsubscribe = onValue(ref(db, `nights/${nightId}`), (snapshot) => {
     if (!snapshot.exists()) {
       callback(null);
       return;
