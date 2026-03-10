@@ -92,7 +92,7 @@
     {/if}
   </div>
 
-  <div class="flex shrink-0 gap-0.5 opacity-0 transition-all duration-300 group-hover:opacity-100">
+  <div class="flex shrink-0 gap-0.5 max-[480px]:opacity-100 opacity-0 transition-all duration-300 group-hover:opacity-100">
     <button
       class="bg-transparent text-text-light p-2 border-none rounded-lg text-sm cursor-pointer transition-all duration-200 hover:bg-wine/8 hover:text-wine"
       title="Rediger"

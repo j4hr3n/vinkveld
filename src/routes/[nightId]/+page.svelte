@@ -10,6 +10,7 @@
         type WineNight,
         type Wine,
     } from "$lib/firebase";
+    import { setUserName } from "$lib/identity";
     import WineCard from "$lib/components/WineCard.svelte";
     import WineForm from "$lib/components/WineForm.svelte";
     import CopiedToast from "$lib/components/CopiedToast.svelte";
@@ -87,6 +88,7 @@
         notes: string;
     }) {
         await addWine(nightId, data);
+        setUserName(data.person);
     }
 
     async function handleEdit(data: {
@@ -152,86 +154,72 @@
     </div>
 {:else}
     <div>
-        <!-- Back link -->
-        <a
-            href="{base}/"
-            class="inline-flex items-center gap-1.5 text-text-light text-[0.82rem] no-underline hover:text-wine transition-colors duration-200 mb-4 animate-fade-in"
-        >
-            <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M10 3L5 8l5 5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Ny vinkveld
-        </a>
-
-        <!-- Header -->
-        <div class="text-center mb-10 pt-4 animate-slide-down">
-            <h1 class="text-[2.4rem] max-[480px]:text-[1.9rem] text-wine mb-1 tracking-tight font-bold leading-tight">
-                {night.title}
-            </h1>
-            <div class="font-accent italic text-text-light text-lg mt-1">
-                {formatDate(night.date)}
-            </div>
-        </div>
-
-        <!-- Share section -->
-        <div class="relative bg-white/60 backdrop-blur-sm rounded-2xl p-5 border border-cream-dark/50 mb-10 animate-rise-in" style="animation-delay:0.1s">
-            <div class="text-[0.82rem] font-medium text-text-light uppercase tracking-wider mb-3">Del med venner</div>
-            <div class="flex gap-2.5 items-center max-[480px]:flex-col">
-                <input
-                    type="text"
-                    value={shareUrl}
-                    readonly
-                    class="flex-1 max-[480px]:w-full py-2.5 px-3.5 border-[1.5px] border-cream-dark rounded-xl text-[0.82rem] bg-cream/60 text-text-light font-mono truncate"
-                />
+        <!-- Compact header -->
+        <div class="animate-slide-down mb-6">
+            <!-- Back + share row -->
+            <div class="flex items-center justify-between mb-3">
+                <a
+                    href="{base}/"
+                    class="inline-flex items-center gap-1.5 text-text-light text-[0.82rem] no-underline hover:text-wine transition-colors duration-200"
+                >
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M10 3L5 8l5 5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Ny vinkveld
+                </a>
                 <button
-                    class="max-[480px]:w-full inline-flex items-center justify-center gap-2 py-2.5 px-5 border-[1.5px] rounded-xl text-[0.85rem] font-semibold font-[inherit] cursor-pointer transition-all duration-300 {copied ? 'border-sage bg-sage/10 text-sage' : 'border-wine/30 bg-transparent text-wine hover:bg-wine hover:text-white hover:border-wine'}"
+                    class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-[0.78rem] font-medium font-[inherit] cursor-pointer transition-all duration-200 border-none {copied ? 'bg-sage/10 text-sage' : 'bg-white/60 text-text-light hover:text-wine hover:bg-white/80'}"
                     onclick={copyLink}
                 >
                     {#if copied}
-                        <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M3 8l4 4 6-7" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                         Kopiert!
                     {:else}
-                        <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
                             <rect x="5" y="5" width="8" height="8" rx="1.5"/>
                             <path d="M3 11V3h8" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        Kopier lenke
+                        Del
                     {/if}
                 </button>
             </div>
+
+            <!-- Title + date -->
+            <h1 class="text-[2rem] max-[480px]:text-[1.6rem] text-wine mb-0.5 tracking-tight font-bold leading-tight">
+                {night.title}
+            </h1>
+            <div class="font-accent italic text-text-light text-base">
+                {formatDate(night.date)}
+            </div>
+
         </div>
 
         <!-- Wine list -->
         {#if wines.length === 0}
-            <div class="text-center py-16 px-4 animate-rise-in" style="animation-delay:0.2s">
-                <!-- CSS wine glass illustration -->
-                <div class="inline-block relative mb-6">
-                    <svg viewBox="0 0 80 100" class="w-20 h-24 mx-auto" fill="none">
+            <div class="text-center py-12 px-4 animate-rise-in" style="animation-delay:0.15s">
+                <div class="inline-block relative mb-4">
+                    <svg viewBox="0 0 80 100" class="w-16 h-20 mx-auto" fill="none">
                         <path d="M24 8h32l-3 36c-.8 8-6 14-13 14s-12.2-6-13-14L24 8z" stroke="#5c1a2a" stroke-width="1.2" opacity="0.15"/>
                         <path d="M30 20h20l-1.5 18c-.5 5-3.5 9-8.5 9s-8-4-8.5-9L30 20z" fill="#5c1a2a" opacity="0.05"/>
                         <line x1="40" y1="58" x2="40" y2="78" stroke="#5c1a2a" stroke-width="1.2" opacity="0.15"/>
                         <line x1="30" y1="78" x2="50" y2="78" stroke="#5c1a2a" stroke-width="1.2" opacity="0.15" stroke-linecap="round"/>
-                        <!-- Decorative drops -->
-                        <circle cx="35" cy="34" r="1.5" fill="#5c1a2a" opacity="0.08"/>
-                        <circle cx="42" cy="30" r="1" fill="#5c1a2a" opacity="0.06"/>
-                        <circle cx="38" cy="38" r="1.2" fill="#5c1a2a" opacity="0.07"/>
                     </svg>
                 </div>
-                <p class="font-accent italic text-text-light text-lg">Ingen viner ennå</p>
-                <p class="text-text-light text-[0.85rem] mt-1 opacity-70">Legg til den første nedenfor</p>
+                <p class="font-accent italic text-text-light text-base">Ingen viner ennå</p>
+                <p class="text-text-light text-[0.82rem] mt-1 opacity-70">Legg til den første nedenfor</p>
             </div>
         {:else}
             <!-- Section label -->
-            <div class="flex items-center gap-3 mb-5 animate-fade-in" style="animation-delay:0.15s">
-                <div class="text-[0.82rem] font-medium text-text-light uppercase tracking-wider">
+            <div class="flex items-center gap-3 mb-3 animate-fade-in" style="animation-delay:0.1s">
+                <div class="text-[0.78rem] font-medium text-text-light uppercase tracking-wider">
                     {wines.length} {wines.length === 1 ? "vin" : "viner"}
                 </div>
                 <div class="flex-1 h-px bg-cream-dark"></div>
             </div>
 
-            <div class="flex flex-col gap-3 mb-10">
+            <div class="flex flex-col gap-3 mb-8">
                 {#each wines as wine, i (wine.id)}
                     <WineCard
                         {wine}
@@ -244,15 +232,12 @@
             </div>
         {/if}
 
-        <!-- Divider -->
-        <div class="flex items-center justify-center gap-3 mb-8 animate-fade-in" style="animation-delay:0.25s">
-            <div class="flex-1 h-px bg-cream-dark"></div>
-            <span class="text-cream-dark text-lg">🍇</span>
+        <!-- Form -->
+        <div class="flex items-center justify-center mb-6 animate-fade-in" style="animation-delay:0.2s">
             <div class="flex-1 h-px bg-cream-dark"></div>
         </div>
 
-        <!-- Form -->
-        <div bind:this={formElement} class="animate-rise-in" style="animation-delay:0.3s">
+        <div bind:this={formElement} class="animate-rise-in" style="animation-delay:0.25s">
             {#key editingWineId}
                 <WineForm
                     editing={editingWine}
@@ -261,6 +246,7 @@
                 />
             {/key}
         </div>
+
     </div>
 
     <CopiedToast visible={toastVisible} />

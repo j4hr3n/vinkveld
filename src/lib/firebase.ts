@@ -3,7 +3,6 @@ import {
   getDatabase,
   ref,
   set,
-  get,
   push,
   update,
   remove,
@@ -61,12 +60,6 @@ export async function createNight(
   return newRef.key!;
 }
 
-export async function getNight(nightId: string): Promise<WineNight | null> {
-  const snapshot = await get(nightRef(nightId));
-  if (!snapshot.exists()) return null;
-  return { id: nightId, ...snapshot.val() } as WineNight;
-}
-
 export function subscribeToNight(
   nightId: string,
   callback: (night: WineNight | null) => void
@@ -107,3 +100,4 @@ export async function removeWine(
 ): Promise<void> {
   await remove(ref(db, `nights/${nightId}/wines/${wineId}`));
 }
+
