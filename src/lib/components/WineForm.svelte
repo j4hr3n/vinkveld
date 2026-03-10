@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { Wine } from "$lib/firebase";
+    import { getUserName, setUserName } from "$lib/identity";
 
     const COLORS: readonly {
         id: string;
@@ -41,7 +42,7 @@
 
     // Load saved name for new wines
     if (!editing) {
-        const savedName = localStorage.getItem("vinkveld-name");
+        const savedName = getUserName();
         if (savedName) person = savedName;
     }
 
@@ -55,7 +56,7 @@
             return;
         }
         submitting = true;
-        localStorage.setItem("vinkveld-name", person.trim());
+        setUserName(person);
         await onSubmit({
             name: name.trim(),
             person: person.trim(),
