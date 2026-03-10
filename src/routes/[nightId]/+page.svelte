@@ -79,7 +79,7 @@
         link: string;
         notes: string;
     }) {
-        await addWine(nightId, data);
+        await addWine(nightId!, data);
     }
 
     async function handleEdit(data: {
@@ -92,12 +92,12 @@
         if (!editingWineId) return;
         const wineId = editingWineId;
         editingWineId = null;
-        await updateWine(nightId, wineId, data);
+        await updateWine(nightId!, wineId, data);
     }
 
     function handleDelete(wineId: string) {
         if (editingWineId === wineId) editingWineId = null;
-        removeWine(nightId, wineId);
+        removeWine(nightId!, wineId);
     }
 
     function startEdit(wineId: string) {
