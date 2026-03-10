@@ -13,11 +13,24 @@
     import WineCard from "$lib/components/WineCard.svelte";
     import WineForm from "$lib/components/WineForm.svelte";
     import CopiedToast from "$lib/components/CopiedToast.svelte";
+    import ErrorToast from "$lib/components/ErrorToast.svelte";
 
     let nightId = $derived(page.params.nightId);
     let night = $state<WineNight | null | undefined>(undefined);
     let editingWineId = $state<string | null>(null);
     let toastVisible = $state(false);
+    let errorMessage = $state("");
+    let errorVisible = $state(false);
+    let errorTimeout: ReturnType<typeof setTimeout> | undefined;
+
+    function showError(message: string) {
+        clearTimeout(errorTimeout);
+        errorMessage = message;
+        errorVisible = true;
+        errorTimeout = setTimeout(() => {
+            errorVisible = false;
+        }, 3000);
+    }
 
     let formElement = $state<HTMLDivElement | null>(null);
 
@@ -79,7 +92,11 @@
         link: string;
         notes: string;
     }) {
-        await addWine(nightId!, data);
+        try {
+            await addWine(nightId!, data);
+        } catch {
+            showError("Kunne ikke lagre vinen");
+        }
     }
 
     async function handleEdit(data: {
@@ -92,12 +109,20 @@
         if (!editingWineId) return;
         const wineId = editingWineId;
         editingWineId = null;
-        await updateWine(nightId!, wineId, data);
+        try {
+            await updateWine(nightId!, wineId, data);
+        } catch {
+            showError("Kunne ikke oppdatere vinen");
+        }
     }
 
-    function handleDelete(wineId: string) {
+    async function handleDelete(wineId: string) {
         if (editingWineId === wineId) editingWineId = null;
-        removeWine(nightId!, wineId);
+        try {
+            await removeWine(nightId!, wineId);
+        } catch {
+            showError("Kunne ikke slette vinen");
+        }
     }
 
     function startEdit(wineId: string) {
@@ -363,4 +388,5 @@
     </div>
 
     <CopiedToast visible={toastVisible} />
+    <ErrorToast message={errorMessage} visible={errorVisible} />
 {/if}

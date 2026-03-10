@@ -2,12 +2,25 @@
     import { goto } from "$app/navigation";
     import { base } from "$app/paths";
     import { createNight } from "$lib/firebase";
+    import ErrorToast from "$lib/components/ErrorToast.svelte";
 
     let title = $state("");
     let date = $state(new Date().toISOString().split("T")[0]);
     let creating = $state(false);
+    let errorMessage = $state("");
+    let errorVisible = $state(false);
+    let errorTimeout: ReturnType<typeof setTimeout> | undefined;
 
     let titleInput = $state<HTMLInputElement | null>(null);
+
+    function showError(message: string) {
+        clearTimeout(errorTimeout);
+        errorMessage = message;
+        errorVisible = true;
+        errorTimeout = setTimeout(() => {
+            errorVisible = false;
+        }, 3000);
+    }
 
     async function handleCreate() {
         if (!title.trim()) {
@@ -15,8 +28,13 @@
             return;
         }
         creating = true;
-        const id = await createNight(title.trim(), date);
-        goto(`${base}/${id}`);
+        try {
+            const id = await createNight(title.trim(), date);
+            goto(`${base}/${id}`);
+        } catch {
+            showError("Kunne ikke opprette vinkvelden");
+            creating = false;
+        }
     }
 
     function handleKeydown(e: KeyboardEvent) {
@@ -81,3 +99,5 @@
         {creating ? "Oppretter..." : "Opprett vinkveld"}
     </button>
 </div>
+
+<ErrorToast message={errorMessage} visible={errorVisible} />
