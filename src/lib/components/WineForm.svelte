@@ -104,7 +104,7 @@
     </h3>
 
     <div class="flex gap-4 max-[480px]:flex-col max-[480px]:gap-0">
-        <div class="flex-1 mb-5">
+        <div class="flex-[2] mb-5">
             <label for="wine-name" class={fieldLabelClass}>Vin</label>
             <WineAutocomplete
                 id="wine-name"
