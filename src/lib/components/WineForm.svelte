@@ -2,6 +2,8 @@
     import type { Wine } from "$lib/firebase";
     import { getUserName, setUserName } from "$lib/identity";
     import { stripeColors } from "$lib/colors";
+    import WineAutocomplete from "./WineAutocomplete.svelte";
+    import { vivinoTypeToColor, type WineSuggestion } from "$lib/vivinoSearch";
 
     const COLORS: readonly {
         id: string;
@@ -72,6 +74,13 @@
         submitting = false;
     }
 
+    function handleWineSelect(s: WineSuggestion) {
+        const parts = [s.winery, s.name, s.vintage].filter(Boolean);
+        name = parts.join(" ");
+        const color = vivinoTypeToColor(s.typeId);
+        if (color) selectedColor = color as Wine["color"];
+    }
+
     function handleKeydown(e: KeyboardEvent) {
         if (e.key === "Enter") handleSubmit();
     }
@@ -97,14 +106,14 @@
     <div class="flex gap-4 max-[480px]:flex-col max-[480px]:gap-0">
         <div class="flex-1 mb-5">
             <label for="wine-name" class={fieldLabelClass}>Vin</label>
-            <input
-                type="text"
+            <WineAutocomplete
                 id="wine-name"
                 placeholder="f.eks. Barolo 2019"
                 bind:value={name}
-                bind:this={nameInput}
+                bind:inputRef={nameInput}
                 onkeydown={handleKeydown}
-                class={fieldInputClass}
+                onSelect={handleWineSelect}
+                inputClass={fieldInputClass}
             />
         </div>
         <div class="flex-1 mb-5">
