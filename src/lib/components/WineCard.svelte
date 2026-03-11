@@ -16,6 +16,8 @@
     index?: number;
   } = $props();
 
+  let confirmingDelete = $state(false);
+
   const bgTints: Record<string, string> = {
     red: "rgba(92,26,42,0.02)",
     white: "rgba(232,221,138,0.06)",
@@ -79,24 +81,42 @@
     {/if}
   </div>
 
-  <div class="flex shrink-0 gap-0.5 max-[480px]:opacity-100 opacity-0 transition-all duration-300 group-hover:opacity-100">
-    <button
-      class="bg-transparent text-text-light p-2 border-none rounded-lg text-sm cursor-pointer transition-all duration-200 hover:bg-wine/8 hover:text-wine"
-      title="Rediger"
-      onclick={() => onEdit(wine.id)}
-    >
-      <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M11 2l3 3-8 8H3v-3l8-8z" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
-    <button
-      class="bg-transparent text-text-light p-2 border-none rounded-lg text-sm cursor-pointer transition-all duration-200 hover:bg-red-50 hover:text-red-500"
-      title="Slett"
-      onclick={() => onDelete(wine.id)}
-    >
-      <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round"/>
-      </svg>
-    </button>
-  </div>
+  {#if confirmingDelete}
+    <div class="flex shrink-0 items-center gap-2 animate-fade-in">
+      <span class="text-[0.8rem] text-text-light whitespace-nowrap">Slette?</span>
+      <button
+        class="bg-wine-dark text-white/90 px-3 py-1 border-none rounded-lg text-[0.78rem] font-medium cursor-pointer transition-all duration-200 hover:bg-wine-dark/90 hover:text-white"
+        onclick={() => onDelete(wine.id)}
+      >
+        Slett
+      </button>
+      <button
+        class="bg-cream-dark/60 text-text-light px-3 py-1 border-none rounded-lg text-[0.78rem] font-medium cursor-pointer transition-all duration-200 hover:bg-cream-dark hover:text-text"
+        onclick={() => (confirmingDelete = false)}
+      >
+        Avbryt
+      </button>
+    </div>
+  {:else}
+    <div class="flex shrink-0 gap-0.5 max-[480px]:opacity-100 opacity-0 transition-all duration-300 group-hover:opacity-100">
+      <button
+        class="bg-transparent text-text-light p-2 border-none rounded-lg text-sm cursor-pointer transition-all duration-200 hover:bg-wine/8 hover:text-wine"
+        title="Rediger"
+        onclick={() => onEdit(wine.id)}
+      >
+        <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M11 2l3 3-8 8H3v-3l8-8z" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <button
+        class="bg-transparent text-text-light p-2 border-none rounded-lg text-sm cursor-pointer transition-all duration-200 hover:bg-wine/8 hover:text-wine"
+        title="Slett"
+        onclick={() => (confirmingDelete = true)}
+      >
+        <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+  {/if}
 </div>
