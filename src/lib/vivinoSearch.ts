@@ -105,7 +105,7 @@ function getNotableVintages(
 			rating: v.statistics?.ratings_average ?? 0,
 			count: v.statistics?.ratings_count ?? 0,
 		}))
-		.filter((v) => !isNaN(v.year) && v.year <= currentYear && v.count >= MIN_RATINGS);
+		.filter((v) => !isNaN(v.year) && v.year <= currentYear && (v.year === queryYear || v.count >= MIN_RATINGS));
 
 	// Sort by year descending (latest vintage first)
 	parsed.sort((a, b) => b.year - a.year);
