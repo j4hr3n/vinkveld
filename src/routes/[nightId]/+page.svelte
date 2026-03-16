@@ -25,6 +25,15 @@
     let selectedPerson = $state<string | null>(null);
 
     let completed = $derived(night?.completed ?? false);
+
+    let isPastEvent = $derived.by(() => {
+        if (!night?.date) return false;
+        const eventDate = new Date(night.date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return eventDate <= today;
+    });
+
     let formElement = $state<HTMLDivElement | null>(null);
 
     let wines = $derived.by(() => {
@@ -249,45 +258,70 @@
                     </svg>
                     Ny vinkveld
                 </a>
-                <button
-                    class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-[0.78rem] font-medium font-[inherit] cursor-pointer transition-all duration-200 border-none {toastVisible
-                        ? 'bg-sage/10 text-sage'
-                        : 'bg-white/60 text-text-light hover:text-wine hover:bg-white/80'}"
-                    onclick={copyLink}
-                >
-                    {#if toastVisible}
-                        <svg
-                            class="w-3.5 h-3.5"
-                            viewBox="0 0 16 16"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                        >
-                            <path
-                                d="M3 8l4 4 6-7"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                        </svg>
-                        Kopiert!
-                    {:else}
-                        <svg
-                            class="w-3.5 h-3.5"
-                            viewBox="0 0 16 16"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                        >
-                            <rect x="5" y="5" width="8" height="8" rx="1.5" />
-                            <path
-                                d="M3 11V3h8"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-                        </svg>
-                        Del
+                <div class="flex items-center gap-2">
+                    {#if isPastEvent}
+                        {#if completed}
+                            <button
+                                class="inline-flex items-center gap-1.5 bg-sage/15 text-sage px-2.5 py-1.5 rounded-lg text-[0.78rem] font-medium font-[inherit] border-none cursor-pointer hover:bg-sage/25 transition-all duration-200"
+                                onclick={toggleCompleted}
+                            >
+                                <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 8l4 4 6-7" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Fullført
+                            </button>
+                        {:else}
+                            <button
+                                class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-[0.78rem] font-medium font-[inherit] cursor-pointer transition-all duration-200 border-none bg-white/60 text-text-light hover:text-wine hover:bg-white/80"
+                                onclick={toggleCompleted}
+                            >
+                                <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M3 8l4 4 6-7" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Marker som fullført
+                            </button>
+                        {/if}
                     {/if}
-                </button>
+                    <button
+                        class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-[0.78rem] font-medium font-[inherit] cursor-pointer transition-all duration-200 border-none {toastVisible
+                            ? 'bg-sage/10 text-sage'
+                            : 'bg-white/60 text-text-light hover:text-wine hover:bg-white/80'}"
+                        onclick={copyLink}
+                    >
+                        {#if toastVisible}
+                            <svg
+                                class="w-3.5 h-3.5"
+                                viewBox="0 0 16 16"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <path
+                                    d="M3 8l4 4 6-7"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                            </svg>
+                            Kopiert!
+                        {:else}
+                            <svg
+                                class="w-3.5 h-3.5"
+                                viewBox="0 0 16 16"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                            >
+                                <rect x="5" y="5" width="8" height="8" rx="1.5" />
+                                <path
+                                    d="M3 11V3h8"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+                            </svg>
+                            Del
+                        {/if}
+                    </button>
+                </div>
             </div>
 
             <!-- Title + date -->
@@ -300,32 +334,6 @@
                 {formatDate(night.date, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
             </div>
 
-            {#if completed}
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="inline-flex items-center gap-1.5 bg-sage/15 text-sage px-3 py-1 rounded-full text-[0.82rem] font-medium">
-                        <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 8l4 4 6-7" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        Fullført
-                    </span>
-                    <button
-                        class="text-text-light text-[0.78rem] bg-transparent border-none cursor-pointer hover:text-wine transition-colors duration-200 font-[inherit] underline decoration-dashed underline-offset-2"
-                        onclick={toggleCompleted}
-                    >
-                        Angre
-                    </button>
-                </div>
-            {:else}
-                <button
-                    class="inline-flex items-center gap-1.5 mt-2 py-1.5 px-3 rounded-lg text-[0.78rem] font-medium font-[inherit] cursor-pointer transition-all duration-200 border-none bg-white/60 text-text-light hover:text-wine hover:bg-white/80"
-                    onclick={toggleCompleted}
-                >
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <path d="M3 8l4 4 6-7" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    Marker som fullført
-                </button>
-            {/if}
         </div>
 
         <!-- Participant avatars -->
@@ -453,15 +461,9 @@
                 <p class="font-accent italic text-text-light text-base mb-1">
                     Vinkvelden er fullført
                 </p>
-                <p class="text-text-light text-[0.82rem] opacity-70 mb-4">
+                <p class="text-text-light text-[0.82rem] opacity-70">
                     Ingen flere viner kan legges til
                 </p>
-                <button
-                    class="text-text-light text-[0.82rem] bg-transparent border-none cursor-pointer hover:text-wine transition-colors duration-200 font-[inherit] underline decoration-dashed underline-offset-2"
-                    onclick={toggleCompleted}
-                >
-                    Angre fullføring
-                </button>
             </div>
         {:else}
             <div
