@@ -37,6 +37,21 @@
     // Feature: Rate without adding a wine
     let raterNameInput = $state('');
 
+    // Profile popover
+    let profileOpen = $state(false);
+    let profileButtonEl = $state<HTMLButtonElement | null>(null);
+    let popoverTop = $state(0);
+    let popoverRight = $state(0);
+
+    function openProfile() {
+        if (profileButtonEl) {
+            const rect = profileButtonEl.getBoundingClientRect();
+            popoverTop = rect.bottom + 10;
+            popoverRight = window.innerWidth - rect.right;
+        }
+        profileOpen = !profileOpen;
+    }
+
     // Collapsible wine list
     let winesOpen = $state(true);
 
@@ -75,6 +90,10 @@
         }
         return [...counts.entries()].map(([name, count]) => ({ name, count }));
     });
+
+    let isKnownParticipant = $derived(
+        participants.some((p) => p.name === currentUser)
+    );
 
     let filteredWines = $derived(
         selectedPerson
@@ -206,6 +225,13 @@
         if (!trimmed) return;
         setUserName(trimmed);
         currentUser = trimmed;
+        profileOpen = false;
+    }
+
+    function handleClaimParticipant(name: string) {
+        setUserName(name);
+        currentUser = name;
+        profileOpen = false;
     }
 </script>
 
@@ -373,6 +399,33 @@
                             Del
                         {/if}
                     </button>
+
+                    <!-- Profile button -->
+                    {#if !completed && wines.length > 0}
+                        {#if isKnownParticipant}
+                            <button
+                                bind:this={profileButtonEl}
+                                onclick={openProfile}
+                                aria-label="Din profil"
+                                class="w-7 h-7 rounded-full flex items-center justify-center text-[0.55rem] font-bold tracking-wide text-white/90 cursor-pointer border-none transition-all duration-200 hover:scale-110 hover:shadow-[0_2px_8px_rgba(92,26,42,0.2)] active:scale-95 {profileOpen ? 'scale-110 shadow-[0_2px_8px_rgba(92,26,42,0.2)]' : ''}"
+                                style="background: {getAvatarColor(currentUser)}"
+                            >
+                                {getInitials(currentUser)}
+                            </button>
+                        {:else}
+                            <button
+                                bind:this={profileButtonEl}
+                                onclick={openProfile}
+                                aria-label="Velg identitet"
+                                class="w-7 h-7 rounded-full flex items-center justify-center cursor-pointer border border-dashed transition-all duration-200 bg-transparent font-[inherit] {profileOpen ? 'border-wine/50 text-wine/70 bg-white/60' : 'border-text-light/25 text-text-light/40 hover:border-wine/40 hover:text-wine/60 hover:bg-white/60'}"
+                            >
+                                <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <circle cx="8" cy="5.5" r="2.5"/>
+                                    <path d="M2.5 14c0-2.8 2.46-4.5 5.5-4.5s5.5 1.7 5.5 4.5" stroke-linecap="round"/>
+                                </svg>
+                            </button>
+                        {/if}
+                    {/if}
                 </div>
             </div>
 
@@ -419,15 +472,17 @@
                             {formatDate(night.date, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
                         </div>
                     </div>
-                    <button
-                        onclick={startEditHeader}
-                        aria-label="Rediger tittel og dato"
-                        class="mt-1.5 p-1.5 rounded-lg border-none bg-transparent text-text-light cursor-pointer opacity-0 group-hover/header:opacity-100 max-[480px]:opacity-100 transition-all duration-200 hover:bg-white/60 hover:text-wine shrink-0"
-                    >
-                        <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                            <path d="M11 2l3 3-8 8H3v-3l8-8z" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </button>
+                    {#if !completed}
+                        <button
+                            onclick={startEditHeader}
+                            aria-label="Rediger tittel og dato"
+                            class="mt-1.5 p-1.5 rounded-lg border-none bg-transparent text-text-light cursor-pointer opacity-0 group-hover/header:opacity-100 max-[480px]:opacity-100 transition-all duration-200 hover:bg-white/60 hover:text-wine shrink-0"
+                        >
+                            <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M11 2l3 3-8 8H3v-3l8-8z" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    {/if}
                 </div>
             {/if}
 
@@ -461,30 +516,6 @@
                             >
                         </button>
                     {/each}
-                </div>
-            </div>
-        {/if}
-
-        <!-- Rater name prompt -->
-        {#if !completed && currentUser === '' && wines.length > 0}
-            <div class="mb-5 animate-fade-in bg-white/70 backdrop-blur-sm rounded-xl px-4 py-3.5 border border-cream-dark/60 shadow-[0_1px_8px_rgba(92,26,42,0.04)]">
-                <p class="text-[0.82rem] text-text-light font-accent italic mb-3">
-                    Bare her for å rangere? Skriv inn navnet ditt:
-                </p>
-                <div class="flex gap-2">
-                    <input
-                        type="text"
-                        placeholder="Ditt navn"
-                        bind:value={raterNameInput}
-                        onkeydown={(e) => e.key === 'Enter' && handleRaterNameSubmit()}
-                        class="flex-1 py-2 px-3 border-[1.5px] border-cream-dark rounded-lg text-sm font-[inherit] bg-cream/60 focus:outline-none focus:border-wine-light focus:bg-white transition-all duration-200"
-                    />
-                    <button
-                        onclick={handleRaterNameSubmit}
-                        class="px-4 py-2 border-none rounded-lg text-sm font-semibold font-[inherit] cursor-pointer bg-wine text-white hover:bg-wine-dark transition-all duration-200 active:scale-[0.97]"
-                    >
-                        OK
-                    </button>
                 </div>
             </div>
         {/if}
@@ -619,4 +650,64 @@
     </div>
 
     <CopiedToast visible={toastVisible} />
+
+    <!-- Profile popover (fixed, outside all stacking contexts) -->
+    {#if profileOpen}
+        <div
+            class="fixed inset-0 z-40"
+            onclick={() => (profileOpen = false)}
+            aria-hidden="true"
+        ></div>
+        <div
+            class="fixed z-50 w-64 bg-white/95 backdrop-blur-md rounded-xl shadow-[0_8px_32px_rgba(92,26,42,0.12),0_2px_8px_rgba(92,26,42,0.06)] border border-cream-dark/60 animate-fade-in overflow-hidden"
+            style="top: {popoverTop}px; right: {popoverRight}px;"
+        >
+            <!-- Arrow notch -->
+            <div class="absolute -top-1.5 right-2.5 w-3 h-3 bg-white/95 border-l border-t border-cream-dark/60 rotate-45"></div>
+
+            <div class="px-4 pt-4 pb-3.5">
+                <p class="text-[0.75rem] text-text-light/60 font-accent italic mb-3 tracking-wide">Hvem er du?</p>
+
+                {#if participants.length > 0}
+                    <div class="flex flex-wrap gap-1.5 mb-3">
+                        {#each participants as p}
+                            <button
+                                onclick={() => handleClaimParticipant(p.name)}
+                                class="flex items-center gap-1.5 py-1 px-2.5 rounded-full border-none cursor-pointer transition-all duration-150 font-[inherit] {currentUser === p.name ? 'bg-wine/10 ring-1 ring-wine/30' : 'bg-cream/60 hover:bg-white hover:shadow-[0_1px_6px_rgba(92,26,42,0.1)]'}"
+                            >
+                                <div
+                                    class="w-5 h-5 rounded-full shrink-0 flex items-center justify-center text-[0.5rem] font-bold tracking-wide text-white/90"
+                                    style="background: {getAvatarColor(p.name)}"
+                                >
+                                    {getInitials(p.name)}
+                                </div>
+                                <span class="text-[0.75rem] font-medium {currentUser === p.name ? 'text-wine' : 'text-text-light'}">{p.name}</span>
+                            </button>
+                        {/each}
+                    </div>
+                    <div class="flex items-center gap-2 text-[0.68rem] text-text-light/35 my-2.5">
+                        <div class="flex-1 h-px bg-cream-dark"></div>
+                        eller
+                        <div class="flex-1 h-px bg-cream-dark"></div>
+                    </div>
+                {/if}
+
+                <div class="flex gap-2">
+                    <input
+                        type="text"
+                        placeholder="Annet navn..."
+                        bind:value={raterNameInput}
+                        onkeydown={(e) => e.key === 'Enter' && handleRaterNameSubmit()}
+                        class="flex-1 py-1.5 px-2.5 border-[1.5px] border-cream-dark rounded-lg text-[0.8rem] font-[inherit] bg-cream/50 focus:outline-none focus:border-wine-light focus:bg-white transition-all duration-200"
+                    />
+                    <button
+                        onclick={handleRaterNameSubmit}
+                        class="px-3 py-1.5 border-none rounded-lg text-[0.8rem] font-semibold font-[inherit] cursor-pointer bg-wine text-white hover:bg-wine-dark transition-all duration-200 active:scale-[0.97]"
+                    >
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    {/if}
 {/if}
