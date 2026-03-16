@@ -13,6 +13,7 @@
     import WineCard from "$lib/components/WineCard.svelte";
     import WineForm from "$lib/components/WineForm.svelte";
     import CopiedToast from "$lib/components/CopiedToast.svelte";
+    import { addToHistory } from "$lib/history";
 
     let nightId = $derived(page.params.nightId);
     let night = $state<WineNight | null | undefined>(undefined);
@@ -52,6 +53,12 @@
             night = data;
         });
         return unsubscribe;
+    });
+
+    $effect(() => {
+        if (night && nightId) {
+            addToHistory(nightId, night.title, night.date);
+        }
     });
 
     function formatDate(dateStr: string): string {

@@ -2,12 +2,18 @@
     import { goto } from "$app/navigation";
     import { base } from "$app/paths";
     import { createNight } from "$lib/firebase";
+    import { getHistory, type HistoryEntry } from "$lib/history";
 
     let title = $state("");
     let date = $state(new Date().toISOString().split("T")[0]);
     let creating = $state(false);
+    let history = $state<HistoryEntry[]>([]);
 
     let titleInput = $state<HTMLInputElement | null>(null);
+
+    $effect(() => {
+        history = getHistory();
+    });
 
     async function handleCreate() {
         if (!title.trim()) {
@@ -21,6 +27,15 @@
 
     function handleKeydown(e: KeyboardEvent) {
         if (e.key === "Enter") handleCreate();
+    }
+
+    function formatDate(dateStr: string): string {
+        const d = new Date(dateStr + "T00:00:00");
+        return d.toLocaleDateString("nb-NO", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+        });
     }
 </script>
 
@@ -81,3 +96,35 @@
         {creating ? "Oppretter..." : "Opprett vinkveld"}
     </button>
 </div>
+
+{#if history.length > 0}
+    <div class="mt-10 animate-rise-in" style="animation-delay: 0.3s">
+        <div class="flex items-center gap-3 mb-4">
+            <h2
+                class="text-[0.82rem] font-medium text-text-light uppercase tracking-wider"
+            >
+                Tidligere vinkvelder
+            </h2>
+            <div class="flex-1 h-px bg-cream-dark"></div>
+        </div>
+
+        <div class="flex flex-col gap-2.5">
+            {#each history as entry, i}
+                <a
+                    href="{base}/{entry.nightId}"
+                    class="block bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-[0_2px_12px_rgba(92,26,42,0.04)] border border-cream-dark/60 no-underline transition-all duration-200 hover:shadow-[0_4px_16px_rgba(92,26,42,0.1)] hover:border-wine-light/40 animate-rise-in"
+                    style="animation-delay: {0.35 + i * 0.05}s"
+                >
+                    <div class="text-wine font-semibold text-base">
+                        {entry.title}
+                    </div>
+                    <div
+                        class="font-accent italic text-text-light text-sm mt-0.5"
+                    >
+                        {formatDate(entry.date)}
+                    </div>
+                </a>
+            {/each}
+        </div>
+    </div>
+{/if}
