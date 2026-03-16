@@ -8,6 +8,7 @@
         updateWine,
         removeWine,
         updateNight,
+        setWineRating,
         type WineNight,
         type Wine,
     } from "$lib/firebase";
@@ -17,12 +18,14 @@
     import { addToHistory } from "$lib/history";
     import { colorOrder } from "$lib/colors";
     import { getInitials, formatDate } from "$lib/utils";
+    import { getUserName } from "$lib/identity";
 
     let nightId = $derived(page.params.nightId);
     let night = $state<WineNight | null | undefined>(undefined);
     let editingWineId = $state<string | null>(null);
     let toastVisible = $state(false);
     let selectedPerson = $state<string | null>(null);
+    let currentUser = $state(getUserName() ?? '');
 
     let completed = $derived(night?.completed ?? false);
 
@@ -145,6 +148,11 @@
         if (completed) return;
         if (editingWineId === wineId) editingWineId = null;
         removeWine(nightId!, wineId);
+    }
+
+    async function handleRate(wineId: string, score: number) {
+        if (!currentUser || !nightId) return;
+        await setWineRating(nightId, wineId, currentUser, score);
     }
 
     function startEdit(wineId: string) {
@@ -445,6 +453,8 @@
                         onEdit={startEdit}
                         onDelete={handleDelete}
                         index={i}
+                        {currentUser}
+                        onRate={handleRate}
                     />
                 {/each}
             </div>
@@ -476,6 +486,7 @@
                         editing={editingWine}
                         onSubmit={editingWine ? handleEdit : handleAdd}
                         onCancel={() => (editingWineId = null)}
+                        onPersonChange={(name) => (currentUser = name)}
                     />
                 {/key}
             </div>

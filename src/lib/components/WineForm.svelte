@@ -21,6 +21,7 @@
         editing = null,
         onSubmit,
         onCancel,
+        onPersonChange,
     }: {
         editing: (Wine & { id: string }) | null;
         onSubmit: (data: {
@@ -31,6 +32,7 @@
             notes: string;
         }) => Promise<void>;
         onCancel?: () => void;
+        onPersonChange?: (name: string) => void;
     } = $props();
 
     let name = $state(untrack(() => editing?.name ?? ""));
@@ -49,6 +51,10 @@
         const savedName = getUserName();
         if (savedName) person = savedName;
     }
+
+    $effect(() => {
+        if (person) onPersonChange?.(person);
+    });
 
     async function handleSubmit() {
         if (!name.trim()) {

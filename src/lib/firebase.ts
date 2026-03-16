@@ -30,6 +30,7 @@ export interface Wine {
   notes: string;
   link: string;
   added: string;
+  ratings?: Record<string, number>;
 }
 
 export interface WineNight {
@@ -102,5 +103,14 @@ export async function removeWine(
   wineId: string
 ): Promise<void> {
   await remove(ref(db, `nights/${nightId}/wines/${wineId}`));
+}
+
+export async function setWineRating(
+  nightId: string,
+  wineId: string,
+  personName: string,
+  score: number
+): Promise<void> {
+  await set(ref(db, `nights/${nightId}/wines/${wineId}/ratings/${personName}`), score);
 }
 
