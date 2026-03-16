@@ -14,11 +14,12 @@
     } from "$lib/firebase";
     import WineCard from "$lib/components/WineCard.svelte";
     import WineForm from "$lib/components/WineForm.svelte";
+    import WineResults from "$lib/components/WineResults.svelte";
     import CopiedToast from "$lib/components/CopiedToast.svelte";
     import { addToHistory } from "$lib/history";
     import { colorOrder } from "$lib/colors";
     import { getInitials, formatDate } from "$lib/utils";
-    import { getUserName } from "$lib/identity";
+    import { getUserName, setUserName } from "$lib/identity";
 
     let nightId = $derived(page.params.nightId);
     let night = $state<WineNight | null | undefined>(undefined);
@@ -26,6 +27,22 @@
     let toastVisible = $state(false);
     let selectedPerson = $state<string | null>(null);
     let currentUser = $state(getUserName() ?? '');
+
+    // Feature: Edit night header
+    let editingHeader = $state(false);
+    let editTitle = $state('');
+    let editDate = $state('');
+    let savingHeader = $state(false);
+
+    // Feature: Rate without adding a wine
+    let raterNameInput = $state('');
+
+    // Collapsible wine list
+    let winesOpen = $state(true);
+
+    $effect(() => {
+        winesOpen = !completed;
+    });
 
     let completed = $derived(night?.completed ?? false);
 
@@ -162,6 +179,33 @@
             () => formElement?.scrollIntoView({ behavior: "smooth" }),
             0,
         );
+    }
+
+    function startEditHeader() {
+        editTitle = night!.title;
+        editDate = night!.date;
+        editingHeader = true;
+    }
+
+    async function saveHeader() {
+        const t = editTitle.trim();
+        if (!t) return;
+        savingHeader = true;
+        try {
+            await updateNight(nightId!, { title: t, date: editDate });
+            editingHeader = false;
+        } finally {
+            savingHeader = false;
+        }
+    }
+
+    function cancelEditHeader() { editingHeader = false; }
+
+    function handleRaterNameSubmit() {
+        const trimmed = raterNameInput.trim();
+        if (!trimmed) return;
+        setUserName(trimmed);
+        currentUser = trimmed;
     }
 </script>
 
@@ -333,14 +377,59 @@
             </div>
 
             <!-- Title + date -->
-            <h1
-                class="text-[2rem] max-[480px]:text-[1.6rem] text-wine mb-0.5 tracking-tight font-bold leading-tight"
-            >
-                {night.title}
-            </h1>
-            <div class="font-accent italic text-text-light text-base">
-                {formatDate(night.date, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
-            </div>
+            {#if editingHeader}
+                <div class="animate-fade-in">
+                    <input
+                        type="text"
+                        bind:value={editTitle}
+                        onkeydown={(e) => { if (e.key === 'Enter') saveHeader(); if (e.key === 'Escape') cancelEditHeader(); }}
+                        class="w-full text-[2rem] max-[480px]:text-[1.6rem] text-wine tracking-tight font-bold leading-tight bg-transparent border-0 border-b-2 border-wine-light focus:outline-none mb-1 font-[inherit] px-0"
+                    />
+                    <input
+                        type="date"
+                        bind:value={editDate}
+                        onkeydown={(e) => { if (e.key === 'Escape') cancelEditHeader(); }}
+                        class="font-accent italic text-text-light text-base bg-transparent border-0 border-b border-cream-dark focus:outline-none focus:border-wine-light font-[inherit] px-0 mb-3"
+                    />
+                    <div class="flex gap-2 mt-2">
+                        <button
+                            onclick={saveHeader}
+                            disabled={savingHeader}
+                            class="px-4 py-1.5 rounded-lg text-sm font-semibold font-[inherit] cursor-pointer bg-wine text-white border-none hover:bg-wine-dark transition-all duration-200 disabled:opacity-60"
+                        >
+                            {savingHeader ? 'Lagrer...' : 'Lagre'}
+                        </button>
+                        <button
+                            onclick={cancelEditHeader}
+                            class="px-4 py-1.5 rounded-lg text-sm font-medium font-[inherit] cursor-pointer bg-transparent text-text-light border border-cream-dark hover:border-wine-light hover:text-wine transition-all duration-200"
+                        >
+                            Avbryt
+                        </button>
+                    </div>
+                </div>
+            {:else}
+                <div class="flex items-start gap-2 group/header">
+                    <div class="flex-1">
+                        <h1
+                            class="text-[2rem] max-[480px]:text-[1.6rem] text-wine mb-0.5 tracking-tight font-bold leading-tight"
+                        >
+                            {night.title}
+                        </h1>
+                        <div class="font-accent italic text-text-light text-base">
+                            {formatDate(night.date, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+                        </div>
+                    </div>
+                    <button
+                        onclick={startEditHeader}
+                        aria-label="Rediger tittel og dato"
+                        class="mt-1.5 p-1.5 rounded-lg border-none bg-transparent text-text-light cursor-pointer opacity-0 group-hover/header:opacity-100 max-[480px]:opacity-100 transition-all duration-200 hover:bg-white/60 hover:text-wine shrink-0"
+                    >
+                        <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M11 2l3 3-8 8H3v-3l8-8z" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+            {/if}
 
         </div>
 
@@ -372,6 +461,30 @@
                             >
                         </button>
                     {/each}
+                </div>
+            </div>
+        {/if}
+
+        <!-- Rater name prompt -->
+        {#if !completed && currentUser === '' && wines.length > 0}
+            <div class="mb-5 animate-fade-in bg-white/70 backdrop-blur-sm rounded-xl px-4 py-3.5 border border-cream-dark/60 shadow-[0_1px_8px_rgba(92,26,42,0.04)]">
+                <p class="text-[0.82rem] text-text-light font-accent italic mb-3">
+                    Bare her for å rangere? Skriv inn navnet ditt:
+                </p>
+                <div class="flex gap-2">
+                    <input
+                        type="text"
+                        placeholder="Ditt navn"
+                        bind:value={raterNameInput}
+                        onkeydown={(e) => e.key === 'Enter' && handleRaterNameSubmit()}
+                        class="flex-1 py-2 px-3 border-[1.5px] border-cream-dark rounded-lg text-sm font-[inherit] bg-cream/60 focus:outline-none focus:border-wine-light focus:bg-white transition-all duration-200"
+                    />
+                    <button
+                        onclick={handleRaterNameSubmit}
+                        class="px-4 py-2 border-none rounded-lg text-sm font-semibold font-[inherit] cursor-pointer bg-wine text-white hover:bg-wine-dark transition-all duration-200 active:scale-[0.97]"
+                    >
+                        OK
+                    </button>
                 </div>
             </div>
         {/if}
@@ -428,36 +541,48 @@
                 </p>
             </div>
         {:else}
-            <!-- Section label -->
-            <div
-                class="flex items-center gap-3 mb-3 animate-fade-in"
+            <!-- Section label / toggle -->
+            <button
+                onclick={() => (winesOpen = !winesOpen)}
+                class="w-full flex items-center gap-3 mb-3 animate-fade-in bg-transparent border-none p-0 cursor-pointer group/toggle"
                 style="animation-delay:0.1s"
             >
-                <div
-                    class="text-[0.78rem] font-medium text-text-light uppercase tracking-wider"
-                >
-                    {filteredWines.length}
-                    {filteredWines.length === 1
-                        ? " vin"
-                        : " viner"}{#if selectedPerson}{" "}fra {selectedPerson}{/if}
+                <div class="text-[0.78rem] font-medium text-text-light uppercase tracking-wider group-hover/toggle:text-wine transition-colors duration-200">
+                    {filteredWines.length}{filteredWines.length === 1 ? " vin" : " viner"}{#if selectedPerson}{" "}fra {selectedPerson}{/if}
                 </div>
                 <div class="flex-1 h-px bg-cream-dark"></div>
-            </div>
+                <svg
+                    class="w-3.5 h-3.5 text-text-light group-hover/toggle:text-wine shrink-0 transition-all duration-300 {winesOpen ? 'rotate-0' : '-rotate-90'}"
+                    viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"
+                >
+                    <path d="M4 6l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
 
-            <div class="flex flex-col gap-3 mb-8">
-                {#each filteredWines as wine, i (wine.id)}
-                    <WineCard
-                        {wine}
-                        isEditing={editingWineId === wine.id}
-                        {completed}
-                        onEdit={startEdit}
-                        onDelete={handleDelete}
-                        index={i}
-                        {currentUser}
-                        onRate={handleRate}
-                    />
-                {/each}
+            <!-- Collapsible wine list -->
+            <div class="grid transition-[grid-template-rows] duration-[360ms] ease-[cubic-bezier(0.22,1,0.36,1)] {winesOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}">
+                <div class="overflow-hidden">
+                    <div class="flex flex-col gap-3 mb-8">
+                        {#each filteredWines as wine, i (wine.id)}
+                            <WineCard
+                                {wine}
+                                isEditing={editingWineId === wine.id}
+                                {completed}
+                                onEdit={startEdit}
+                                onDelete={handleDelete}
+                                index={i}
+                                {currentUser}
+                                onRate={handleRate}
+                            />
+                        {/each}
+                    </div>
+                </div>
             </div>
+        {/if}
+
+        <!-- Results podium -->
+        {#if completed && wines.length > 0}
+            <WineResults {wines} />
         {/if}
 
         <!-- Form -->

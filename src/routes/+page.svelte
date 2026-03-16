@@ -2,7 +2,7 @@
     import { goto } from "$app/navigation";
     import { base } from "$app/paths";
     import { createNight } from "$lib/firebase";
-    import { getHistory, type HistoryEntry } from "$lib/history";
+    import { getHistory, removeFromHistory, type HistoryEntry } from "$lib/history";
     import { formatDate } from "$lib/utils";
 
     let title = $state("");
@@ -24,6 +24,11 @@
 
     function handleKeydown(e: KeyboardEvent) {
         if (e.key === "Enter") handleCreate();
+    }
+
+    function handleRemoveHistory(nightId: string) {
+        removeFromHistory(nightId);
+        history = getHistory();
     }
 
 </script>
@@ -99,20 +104,31 @@
 
         <div class="flex flex-col gap-2.5">
             {#each history as entry, i}
-                <a
-                    href="{base}/{entry.nightId}"
-                    class="block bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-[0_2px_12px_rgba(92,26,42,0.04)] border border-cream-dark/60 no-underline transition-all duration-200 hover:shadow-[0_4px_16px_rgba(92,26,42,0.1)] hover:border-wine-light/40 animate-rise-in"
+                <div
+                    class="relative group/hist animate-rise-in"
                     style="animation-delay: {0.35 + i * 0.05}s"
                 >
-                    <div class="text-wine font-semibold text-base">
-                        {entry.title}
-                    </div>
-                    <div
-                        class="font-accent italic text-text-light text-sm mt-0.5"
+                    <a
+                        href="{base}/{entry.nightId}"
+                        class="block bg-white/80 backdrop-blur-sm rounded-xl p-4 pr-10 shadow-[0_2px_12px_rgba(92,26,42,0.04)] border border-cream-dark/60 no-underline transition-all duration-200 hover:shadow-[0_4px_16px_rgba(92,26,42,0.1)] hover:border-wine-light/40"
                     >
-                        {formatDate(entry.date)}
-                    </div>
-                </a>
+                        <div class="text-wine font-semibold text-base">
+                            {entry.title}
+                        </div>
+                        <div class="font-accent italic text-text-light text-sm mt-0.5">
+                            {formatDate(entry.date)}
+                        </div>
+                    </a>
+                    <button
+                        onclick={() => handleRemoveHistory(entry.nightId)}
+                        aria-label="Fjern fra historikk"
+                        class="absolute top-2.5 right-2.5 p-1.5 rounded-lg border-none bg-transparent text-text-light cursor-pointer opacity-0 group-hover/hist:opacity-100 max-[480px]:opacity-100 transition-all duration-200 hover:bg-wine/8 hover:text-wine"
+                    >
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </div>
             {/each}
         </div>
     </div>

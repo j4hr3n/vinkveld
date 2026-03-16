@@ -20,6 +20,14 @@ export function getHistory(): HistoryEntry[] {
 	}
 }
 
+export function removeFromHistory(nightId: string): void {
+	if (typeof localStorage === 'undefined') return;
+	try {
+		const filtered = getHistory().filter((e) => e.nightId !== nightId);
+		localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+	} catch { /* ignore */ }
+}
+
 export function addToHistory(nightId: string, title: string, date: string): void {
 	if (typeof localStorage === 'undefined') return;
 	try {
