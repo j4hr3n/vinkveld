@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { searchWines, type WineSuggestion } from "$lib/vivinoSearch";
+	import { tick } from "svelte";
+	import { searchWines, TYPE_MAP, type WineSuggestion } from "$lib/vivinoSearch";
 	import { stripeColors } from "$lib/colors";
 	let {
 		open = $bindable(false),
@@ -27,14 +28,6 @@
 	let activeIndex = $state(-1);
 	let searchInput = $state<HTMLInputElement | null>(null);
 	let debounceTimer: ReturnType<typeof setTimeout> | undefined;
-
-	const TYPE_COLORS: Record<number, string> = {
-		1: "red",
-		2: "white",
-		3: "bubbles",
-		4: "rosé",
-		7: "white",
-	};
 
 	function handleInput() {
 		clearTimeout(debounceTimer);
@@ -107,16 +100,17 @@
 
 	function getColorForType(typeId: number | undefined): string {
 		if (typeId == null) return "#999";
-		const color = TYPE_COLORS[typeId];
+		const color = TYPE_MAP[typeId];
 		return color ? (stripeColors[color] ?? "#999") : "#999";
 	}
 
 	$effect(() => {
 		if (open) {
-			// Focus input after mount animation
-			setTimeout(() => searchInput?.focus(), 50);
+			tick().then(() => searchInput?.focus());
 		}
 	});
+
+	$effect(() => () => clearTimeout(debounceTimer));
 </script>
 
 {#if open}
@@ -140,6 +134,7 @@
 					<h2 class="text-lg text-wine font-semibold font-serif m-0">Finn vin</h2>
 					<button
 						class="w-8 h-8 flex items-center justify-center rounded-lg border-none bg-transparent text-text-light cursor-pointer transition-all duration-200 hover:bg-wine/8 hover:text-wine"
+						aria-label="Lukk"
 						onclick={close}
 					>
 						<svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">

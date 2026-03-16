@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Wine } from "$lib/firebase";
-  import { stripeColors, colorLabels } from "$lib/colors";
+  import { stripeColors, colorLabels, bgTints } from "$lib/colors";
+  import { getInitials } from "$lib/utils";
 
   let {
     wine,
@@ -20,21 +21,7 @@
 
   let confirmingDelete = $state(false);
 
-  const bgTints: Record<string, string> = {
-    red: "rgba(92,26,42,0.02)",
-    white: "rgba(232,221,138,0.06)",
-    rosé: "rgba(232,144,154,0.04)",
-    bubbles: "rgba(212,200,168,0.04)",
-  };
-
-  let initials = $derived(
-    wine.person
-      .split(" ")
-      .map((w) => w[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2)
-  );
+  let initials = $derived(getInitials(wine.person));
 </script>
 
 <div

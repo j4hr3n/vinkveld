@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { untrack } from "svelte";
     import type { Wine } from "$lib/firebase";
     import { getUserName, setUserName } from "$lib/identity";
     import { stripeColors } from "$lib/colors";
@@ -32,11 +33,11 @@
         onCancel?: () => void;
     } = $props();
 
-    let name = $state(editing?.name ?? "");
-    let person = $state(editing?.person ?? "");
-    let selectedColor = $state<Wine["color"]>(editing?.color ?? "red");
-    let link = $state(editing?.link ?? "");
-    let notes = $state(editing?.notes ?? "");
+    let name = $state(untrack(() => editing?.name ?? ""));
+    let person = $state(untrack(() => editing?.person ?? ""));
+    let selectedColor = $state<Wine["color"]>(untrack(() => editing?.color ?? "red"));
+    let link = $state(untrack(() => editing?.link ?? ""));
+    let notes = $state(untrack(() => editing?.notes ?? ""));
     let submitting = $state(false);
     let searchOpen = $state(false);
 
@@ -44,7 +45,7 @@
     let personInput = $state<HTMLInputElement | null>(null);
 
     // Load saved name for new wines
-    if (!editing) {
+    if (untrack(() => !editing)) {
         const savedName = getUserName();
         if (savedName) person = savedName;
     }
@@ -106,7 +107,7 @@
 
     <div class="flex gap-4 max-[480px]:flex-col max-[480px]:gap-0">
         <div class="flex-[2] mb-5">
-            <label class={fieldLabelClass}>Vin</label>
+            <label for="wine-name" class={fieldLabelClass}>Vin</label>
             <div class="flex gap-2">
                 <input
                     type="text"
@@ -146,7 +147,7 @@
     </div>
 
     <div class="mb-5">
-        <label class={fieldLabelClass}>Type</label>
+        <div class={fieldLabelClass}>Type</div>
         <div class="grid grid-cols-4 gap-3">
             {#each COLORS as color}
                 <button

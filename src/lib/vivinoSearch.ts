@@ -116,7 +116,7 @@ function getNotableVintages(
 	return parsed.slice(0, MAX_VINTAGES_PER_HIT);
 }
 
-const TYPE_MAP: Record<number, string> = {
+export const TYPE_MAP: Record<number, string> = {
 	1: "red",
 	2: "white",
 	3: "bubbles",

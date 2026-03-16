@@ -15,6 +15,8 @@
     import WineForm from "$lib/components/WineForm.svelte";
     import CopiedToast from "$lib/components/CopiedToast.svelte";
     import { addToHistory } from "$lib/history";
+    import { colorOrder } from "$lib/colors";
+    import { getInitials, formatDate } from "$lib/utils";
 
     let nightId = $derived(page.params.nightId);
     let night = $state<WineNight | null | undefined>(undefined);
@@ -31,12 +33,6 @@
             ...w,
             id,
         }));
-        const colorOrder: Record<string, number> = {
-            bubbles: 0,
-            rosé: 1,
-            white: 2,
-            red: 3,
-        };
         list.sort(
             (a, b) => (colorOrder[a.color] ?? 99) - (colorOrder[b.color] ?? 99),
         );
@@ -62,15 +58,6 @@
             ? (wines.find((w) => w.id === editingWineId) ?? null)
             : null,
     );
-
-    function getInitials(name: string): string {
-        return name
-            .split(" ")
-            .map((w) => w[0])
-            .join("")
-            .toUpperCase()
-            .slice(0, 2);
-    }
 
     function getAvatarColor(name: string): string {
         let hash = 0;
@@ -109,20 +96,13 @@
         if (completed) editingWineId = null;
     });
 
-    function formatDate(dateStr: string): string {
-        const d = new Date(dateStr + "T00:00:00");
-        return d.toLocaleDateString("nb-NO", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-        });
-    }
+    let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
     function copyLink() {
         navigator.clipboard.writeText(window.location.href);
         toastVisible = true;
-        setTimeout(() => {
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
             toastVisible = false;
         }, 1500);
     }
@@ -317,7 +297,7 @@
                 {night.title}
             </h1>
             <div class="font-accent italic text-text-light text-base">
-                {formatDate(night.date)}
+                {formatDate(night.date, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
             </div>
 
             {#if completed}

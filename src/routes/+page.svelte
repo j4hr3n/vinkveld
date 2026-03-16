@@ -3,17 +3,14 @@
     import { base } from "$app/paths";
     import { createNight } from "$lib/firebase";
     import { getHistory, type HistoryEntry } from "$lib/history";
+    import { formatDate } from "$lib/utils";
 
     let title = $state("");
     let date = $state(new Date().toISOString().split("T")[0]);
     let creating = $state(false);
-    let history = $state<HistoryEntry[]>([]);
+    let history = $state(getHistory());
 
     let titleInput = $state<HTMLInputElement | null>(null);
-
-    $effect(() => {
-        history = getHistory();
-    });
 
     async function handleCreate() {
         if (!title.trim()) {
@@ -29,14 +26,6 @@
         if (e.key === "Enter") handleCreate();
     }
 
-    function formatDate(dateStr: string): string {
-        const d = new Date(dateStr + "T00:00:00");
-        return d.toLocaleDateString("nb-NO", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-        });
-    }
 </script>
 
 <svelte:head>
