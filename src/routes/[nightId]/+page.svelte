@@ -411,7 +411,7 @@
                     </button>
 
                     <!-- Profile button -->
-                    {#if !completed && wines.length > 0}
+                    {#if wines.length > 0}
                         {#if isKnownParticipant}
                             <button
                                 bind:this={profileButtonEl}
