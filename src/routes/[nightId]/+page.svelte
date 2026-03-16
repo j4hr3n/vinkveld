@@ -356,7 +356,7 @@
                                 <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M3 8l4 4 6-7" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
-                                Fullført
+                                <span class="hidden sm:inline">Fullført</span>
                             </button>
                         {:else}
                             <button
@@ -366,7 +366,7 @@
                                 <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
                                     <path d="M3 8l4 4 6-7" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
-                                Marker som fullført
+                                <span class="hidden sm:inline">Marker som fullført</span>
                             </button>
                         {/if}
                     {/if}
@@ -390,7 +390,7 @@
                                     stroke-linejoin="round"
                                 />
                             </svg>
-                            Kopiert!
+                            <span class="hidden sm:inline">Kopiert!</span>
                         {:else}
                             <svg
                                 class="w-3.5 h-3.5"
@@ -406,7 +406,7 @@
                                     stroke-linejoin="round"
                                 />
                             </svg>
-                            Del
+                            <span class="hidden sm:inline">Del</span>
                         {/if}
                     </button>
 
