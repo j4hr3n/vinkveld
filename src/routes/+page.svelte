@@ -1,7 +1,8 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import { goto } from "$app/navigation";
     import { base } from "$app/paths";
-    import { createNight } from "$lib/firebase";
+    import { createNight, subscribeToNight } from "$lib/firebase";
     import { getHistory, removeFromHistory, type HistoryEntry } from "$lib/history";
     import { formatDate } from "$lib/utils";
 
@@ -9,6 +10,19 @@
     let date = $state(new Date().toISOString().split("T")[0]);
     let creating = $state(false);
     let history = $state(getHistory());
+
+    onMount(() => {
+        const entries = getHistory();
+        const unsubscribers = entries.map((entry) =>
+            subscribeToNight(entry.nightId, (night) => {
+                if (night === null) {
+                    removeFromHistory(entry.nightId);
+                    history = getHistory();
+                }
+            })
+        );
+        return () => unsubscribers.forEach((u) => u());
+    });
 
     let titleInput = $state<HTMLInputElement | null>(null);
 
