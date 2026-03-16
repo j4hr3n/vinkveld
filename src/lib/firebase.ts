@@ -37,7 +37,15 @@ export interface WineNight {
   title: string;
   date: string;
   created: string;
+  completed?: boolean;
   wines?: Record<string, Wine>;
+}
+
+export async function updateNight(
+  nightId: string,
+  data: Partial<Pick<WineNight, "title" | "date" | "completed">>
+): Promise<void> {
+  await update(ref(db, `nights/${nightId}`), data);
 }
 
 export async function createNight(

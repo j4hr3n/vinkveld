@@ -5,12 +5,14 @@
   let {
     wine,
     isEditing = false,
+    completed = false,
     onEdit,
     onDelete,
     index = 0,
   }: {
     wine: Wine & { id: string };
     isEditing: boolean;
+    completed?: boolean;
     onEdit: (id: string) => void;
     onDelete: (id: string) => void;
     index?: number;
@@ -81,7 +83,7 @@
     {/if}
   </div>
 
-  {#if confirmingDelete}
+  {#if !completed}{#if confirmingDelete}
     <div class="flex shrink-0 items-center gap-2 animate-fade-in">
       <span class="text-[0.8rem] text-text-light whitespace-nowrap">Slette?</span>
       <button
@@ -118,5 +120,5 @@
         </svg>
       </button>
     </div>
-  {/if}
+  {/if}{/if}
 </div>

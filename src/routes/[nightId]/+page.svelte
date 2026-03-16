@@ -7,6 +7,7 @@
         addWine,
         updateWine,
         removeWine,
+        updateNight,
         type WineNight,
         type Wine,
     } from "$lib/firebase";
@@ -21,6 +22,7 @@
     let toastVisible = $state(false);
     let selectedPerson = $state<string | null>(null);
 
+    let completed = $derived(night?.completed ?? false);
     let formElement = $state<HTMLDivElement | null>(null);
 
     let wines = $derived.by(() => {
@@ -83,6 +85,11 @@
         selectedPerson = selectedPerson === name ? null : name;
     }
 
+    function toggleCompleted() {
+        if (!completed) editingWineId = null;
+        updateNight(nightId!, { completed: !completed });
+    }
+
     onMount(() => {
         const id = nightId;
         if (!id) return;
@@ -96,6 +103,10 @@
         if (night && nightId) {
             addToHistory(nightId, night.title, night.date);
         }
+    });
+
+    $effect(() => {
+        if (completed) editingWineId = null;
     });
 
     function formatDate(dateStr: string): string {
@@ -123,6 +134,7 @@
         link: string;
         notes: string;
     }) {
+        if (completed) return;
         await addWine(nightId!, data);
     }
 
@@ -133,6 +145,7 @@
         link: string;
         notes: string;
     }) {
+        if (completed) return;
         if (!editingWineId) return;
         const wineId = editingWineId;
         editingWineId = null;
@@ -140,11 +153,13 @@
     }
 
     function handleDelete(wineId: string) {
+        if (completed) return;
         if (editingWineId === wineId) editingWineId = null;
         removeWine(nightId!, wineId);
     }
 
     function startEdit(wineId: string) {
+        if (completed) return;
         editingWineId = wineId;
         setTimeout(
             () => formElement?.scrollIntoView({ behavior: "smooth" }),
@@ -304,6 +319,33 @@
             <div class="font-accent italic text-text-light text-base">
                 {formatDate(night.date)}
             </div>
+
+            {#if completed}
+                <div class="flex items-center gap-2 mt-2">
+                    <span class="inline-flex items-center gap-1.5 bg-sage/15 text-sage px-3 py-1 rounded-full text-[0.82rem] font-medium">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 8l4 4 6-7" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        Fullført
+                    </span>
+                    <button
+                        class="text-text-light text-[0.78rem] bg-transparent border-none cursor-pointer hover:text-wine transition-colors duration-200 font-[inherit] underline decoration-dashed underline-offset-2"
+                        onclick={toggleCompleted}
+                    >
+                        Angre
+                    </button>
+                </div>
+            {:else}
+                <button
+                    class="inline-flex items-center gap-1.5 mt-2 py-1.5 px-3 rounded-lg text-[0.78rem] font-medium font-[inherit] cursor-pointer transition-all duration-200 border-none bg-white/60 text-text-light hover:text-wine hover:bg-white/80"
+                    onclick={toggleCompleted}
+                >
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M3 8l4 4 6-7" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Marker som fullført
+                </button>
+            {/if}
         </div>
 
         <!-- Participant avatars -->
@@ -386,7 +428,7 @@
                     Ingen viner ennå
                 </p>
                 <p class="text-text-light text-[0.82rem] mt-1 opacity-70">
-                    Legg til den første nedenfor
+                    {completed ? "Ingen viner ble lagt til" : "Legg til den første nedenfor"}
                 </p>
             </div>
         {:else}
@@ -411,6 +453,7 @@
                     <WineCard
                         {wine}
                         isEditing={editingWineId === wine.id}
+                        {completed}
                         onEdit={startEdit}
                         onDelete={handleDelete}
                         index={i}
@@ -425,19 +468,36 @@
             style="animation-delay:0.2s"
         ></div>
 
-        <div
-            bind:this={formElement}
-            class="animate-rise-in"
-            style="animation-delay:0.25s"
-        >
-            {#key editingWineId}
-                <WineForm
-                    editing={editingWine}
-                    onSubmit={editingWine ? handleEdit : handleAdd}
-                    onCancel={() => (editingWineId = null)}
-                />
-            {/key}
-        </div>
+        {#if completed}
+            <div class="text-center py-8 animate-fade-in">
+                <p class="font-accent italic text-text-light text-base mb-1">
+                    Vinkvelden er fullført
+                </p>
+                <p class="text-text-light text-[0.82rem] opacity-70 mb-4">
+                    Ingen flere viner kan legges til
+                </p>
+                <button
+                    class="text-text-light text-[0.82rem] bg-transparent border-none cursor-pointer hover:text-wine transition-colors duration-200 font-[inherit] underline decoration-dashed underline-offset-2"
+                    onclick={toggleCompleted}
+                >
+                    Angre fullføring
+                </button>
+            </div>
+        {:else}
+            <div
+                bind:this={formElement}
+                class="animate-rise-in"
+                style="animation-delay:0.25s"
+            >
+                {#key editingWineId}
+                    <WineForm
+                        editing={editingWine}
+                        onSubmit={editingWine ? handleEdit : handleAdd}
+                        onCancel={() => (editingWineId = null)}
+                    />
+                {/key}
+            </div>
+        {/if}
     </div>
 
     <CopiedToast visible={toastVisible} />
