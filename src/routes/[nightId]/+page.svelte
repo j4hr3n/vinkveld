@@ -19,6 +19,7 @@
     let night = $state<WineNight | null | undefined>(undefined);
     let editingWineId = $state<string | null>(null);
     let toastVisible = $state(false);
+    let selectedPerson = $state<string | null>(null);
 
     let formElement = $state<HTMLDivElement | null>(null);
 
@@ -40,11 +41,47 @@
         return list;
     });
 
+    let participants = $derived.by(() => {
+        const counts = new Map<string, number>();
+        for (const w of wines) {
+            counts.set(w.person, (counts.get(w.person) ?? 0) + 1);
+        }
+        return [...counts.entries()].map(([name, count]) => ({ name, count }));
+    });
+
+    let filteredWines = $derived(
+        selectedPerson
+            ? wines.filter((w) => w.person === selectedPerson)
+            : wines,
+    );
+
     let editingWine = $derived(
         editingWineId
             ? (wines.find((w) => w.id === editingWineId) ?? null)
             : null,
     );
+
+    function getInitials(name: string): string {
+        return name
+            .split(" ")
+            .map((w) => w[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2);
+    }
+
+    function getAvatarColor(name: string): string {
+        let hash = 0;
+        for (let i = 0; i < name.length; i++) {
+            hash = name.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const hue = ((hash % 360) + 360) % 360;
+        return `hsl(${hue}, 40%, 35%)`;
+    }
+
+    function togglePerson(name: string) {
+        selectedPerson = selectedPerson === name ? null : name;
+    }
 
     onMount(() => {
         const id = nightId;
@@ -269,6 +306,38 @@
             </div>
         </div>
 
+        <!-- Participant avatars -->
+        {#if participants.length > 0}
+            <div class="mb-5 animate-fade-in" style="animation-delay:0.08s">
+                <!-- Avatar row -->
+                <div class="flex flex-wrap gap-2 mb-2.5">
+                    {#each participants as p, i}
+                        <button
+                            class="flex items-center gap-2 py-1.5 px-3 rounded-full border-none cursor-pointer transition-all duration-300 font-[inherit] {selectedPerson ===
+                            p.name
+                                ? 'bg-white shadow-[0_2px_12px_rgba(92,26,42,0.12)] scale-105 ring-2 ring-wine/30'
+                                : 'bg-white/50 hover:bg-white/80 hover:shadow-[0_1px_6px_rgba(92,26,42,0.06)]'}"
+                            onclick={() => togglePerson(p.name)}
+                            style="animation-delay: {i * 0.04}s"
+                        >
+                            <div
+                                class="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[0.6rem] font-bold tracking-wide text-white/90"
+                                style="background: {getAvatarColor(p.name)}"
+                            >
+                                {getInitials(p.name)}
+                            </div>
+                            <span
+                                class="text-[0.8rem] font-medium {selectedPerson ===
+                                p.name
+                                    ? 'text-wine'
+                                    : 'text-text-light'}">{p.name}</span
+                            >
+                        </button>
+                    {/each}
+                </div>
+            </div>
+        {/if}
+
         <!-- Wine list -->
         {#if wines.length === 0}
             <div
@@ -329,14 +398,16 @@
                 <div
                     class="text-[0.78rem] font-medium text-text-light uppercase tracking-wider"
                 >
-                    {wines.length}
-                    {wines.length === 1 ? "vin" : "viner"}
+                    {filteredWines.length}
+                    {filteredWines.length === 1
+                        ? " vin"
+                        : " viner"}{#if selectedPerson}{" "}fra {selectedPerson}{/if}
                 </div>
                 <div class="flex-1 h-px bg-cream-dark"></div>
             </div>
 
             <div class="flex flex-col gap-3 mb-8">
-                {#each wines as wine, i (wine.id)}
+                {#each filteredWines as wine, i (wine.id)}
                     <WineCard
                         {wine}
                         isEditing={editingWineId === wine.id}
