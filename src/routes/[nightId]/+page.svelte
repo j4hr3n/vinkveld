@@ -306,7 +306,8 @@
                 <div class="flex flex-wrap gap-2 mb-2.5">
                     {#each participants as p, i}
                         <button
-                            class="flex items-center gap-2 py-1.5 px-3 rounded-full border-none cursor-pointer transition-all duration-300 font-[inherit] {selectedPerson === p.name
+                            class="flex items-center gap-2 py-1.5 px-3 rounded-full border-none cursor-pointer transition-all duration-300 font-[inherit] {selectedPerson ===
+                            p.name
                                 ? 'bg-white shadow-[0_2px_12px_rgba(92,26,42,0.12)] scale-105 ring-2 ring-wine/30'
                                 : 'bg-white/50 hover:bg-white/80 hover:shadow-[0_1px_6px_rgba(92,26,42,0.06)]'}"
                             onclick={() => togglePerson(p.name)}
@@ -318,14 +319,14 @@
                             >
                                 {getInitials(p.name)}
                             </div>
-                            <span class="text-[0.8rem] font-medium {selectedPerson === p.name ? 'text-wine' : 'text-text-light'}">{p.name}</span>
+                            <span
+                                class="text-[0.8rem] font-medium {selectedPerson ===
+                                p.name
+                                    ? 'text-wine'
+                                    : 'text-text-light'}">{p.name}</span
+                            >
                         </button>
                     {/each}
-                </div>
-
-                <!-- Summary line -->
-                <div class="text-[0.78rem] text-text-light font-accent italic">
-                    {#each participants as p, i}{#if i > 0} · {/if}{p.name}: {p.count} {p.count === 1 ? "vin" : "viner"}{/each}
                 </div>
             </div>
         {/if}
@@ -391,7 +392,9 @@
                     class="text-[0.78rem] font-medium text-text-light uppercase tracking-wider"
                 >
                     {filteredWines.length}
-                    {filteredWines.length === 1 ? "vin" : "viner"}{#if selectedPerson} fra {selectedPerson}{/if}
+                    {filteredWines.length === 1
+                        ? " vin"
+                        : " viner"}{#if selectedPerson}{" "}fra {selectedPerson}{/if}
                 </div>
                 <div class="flex-1 h-px bg-cream-dark"></div>
             </div>
