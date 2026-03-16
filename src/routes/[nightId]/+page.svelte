@@ -37,8 +37,17 @@
     // Feature: Rate without adding a wine
     let raterNameInput = $state('');
 
-    // Profile popover
-    let profileOpen = $state(false);
+    // Profile popover — open by default if no user is set
+    let profileOpen = $state(!getUserName());
+
+    // Position the auto-opened popover once the profile button enters the DOM
+    $effect(() => {
+        if (profileOpen && profileButtonEl) {
+            const rect = profileButtonEl.getBoundingClientRect();
+            popoverTop = rect.bottom + 20;
+            popoverRight = window.innerWidth - rect.right;
+        }
+    });
     let profileButtonEl = $state<HTMLButtonElement | null>(null);
     let popoverTop = $state(0);
     let popoverRight = $state(0);
@@ -46,7 +55,7 @@
     function openProfile() {
         if (profileButtonEl) {
             const rect = profileButtonEl.getBoundingClientRect();
-            popoverTop = rect.bottom + 10;
+            popoverTop = rect.bottom + 20;
             popoverRight = window.innerWidth - rect.right;
         }
         profileOpen = !profileOpen;
@@ -131,6 +140,7 @@
         const unsubscribe = subscribeToNight(id, (data) => {
             night = data;
         });
+
         return unsubscribe;
     });
 
@@ -640,6 +650,7 @@
                 {#key editingWineId}
                     <WineForm
                         editing={editingWine}
+                        {currentUser}
                         onSubmit={editingWine ? handleEdit : handleAdd}
                         onCancel={() => (editingWineId = null)}
                         onPersonChange={(name) => (currentUser = name)}

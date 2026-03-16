@@ -35,7 +35,7 @@
   // Keep in sync when Firebase pushes an update for this user's score
   $effect(() => {
     const persisted = wine.ratings?.[currentUser];
-    if (persisted != null) ratingInput = String(persisted);
+    ratingInput = persisted != null ? String(persisted) : '';
   });
 
   function submitRating() {

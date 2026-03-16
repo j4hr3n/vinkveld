@@ -19,11 +19,13 @@
 
     let {
         editing = null,
+        currentUser = '',
         onSubmit,
         onCancel,
         onPersonChange,
     }: {
         editing: (Wine & { id: string }) | null;
+        currentUser?: string;
         onSubmit: (data: {
             name: string;
             person: string;
@@ -51,6 +53,11 @@
         const savedName = getUserName();
         if (savedName) person = savedName;
     }
+
+    // Sync person field when user swaps identity (only for new wines)
+    $effect(() => {
+        if (!editing && currentUser) person = currentUser;
+    });
 
     $effect(() => {
         if (person) onPersonChange?.(person);
