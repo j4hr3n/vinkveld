@@ -32,6 +32,7 @@
     let editingHeader = $state(false);
     let editTitle = $state('');
     let editDate = $state('');
+    let editType = $state<"home" | "restaurant">("home");
     let savingHeader = $state(false);
 
     // Feature: Rate without adding a wine
@@ -69,6 +70,11 @@
     });
 
     let completed = $derived(night?.completed ?? false);
+    let isRestaurant = $derived((night?.type ?? "home") === "restaurant");
+
+    $effect(() => {
+        if (isRestaurant) selectedPerson = null;
+    });
 
     let isPastEvent = $derived.by(() => {
         if (!night?.date) return false;
@@ -215,6 +221,7 @@
     function startEditHeader() {
         editTitle = night!.title;
         editDate = night!.date;
+        editType = night!.type ?? "home";
         editingHeader = true;
     }
 
@@ -223,7 +230,7 @@
         if (!t) return;
         savingHeader = true;
         try {
-            await updateNight(nightId!, { title: t, date: editDate });
+            await updateNight(nightId!, { title: t, date: editDate, type: editType });
             editingHeader = false;
         } finally {
             savingHeader = false;
@@ -413,7 +420,7 @@
                     </button>
 
                     <!-- Profile button -->
-                    {#if wines.length > 0}
+                    {#if wines.length > 0 || isRestaurant}
                         {#if isKnownParticipant}
                             <button
                                 bind:this={profileButtonEl}
@@ -456,6 +463,26 @@
                         onkeydown={(e) => { if (e.key === 'Escape') cancelEditHeader(); }}
                         class="font-accent italic text-text-light text-base bg-transparent border-0 border-b border-cream-dark focus:outline-none focus:border-wine-light font-[inherit] px-0 mb-3"
                     />
+                    <div class="flex gap-2 mb-3">
+                        <button
+                            type="button"
+                            class="flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-[0.82rem] font-medium font-[inherit] cursor-pointer transition-all duration-200 border-[1.5px] {editType === 'home'
+                                ? 'border-wine bg-wine/5 text-wine'
+                                : 'border-cream-dark bg-transparent text-text-light hover:border-wine-light'}"
+                            onclick={() => (editType = "home")}
+                        >
+                            Hjemme
+                        </button>
+                        <button
+                            type="button"
+                            class="flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-[0.82rem] font-medium font-[inherit] cursor-pointer transition-all duration-200 border-[1.5px] {editType === 'restaurant'
+                                ? 'border-wine bg-wine/5 text-wine'
+                                : 'border-cream-dark bg-transparent text-text-light hover:border-wine-light'}"
+                            onclick={() => (editType = "restaurant")}
+                        >
+                            Restaurant
+                        </button>
+                    </div>
                     <div class="flex gap-2 mt-2">
                         <button
                             onclick={saveHeader}
@@ -501,7 +528,7 @@
         </div>
 
         <!-- Participant avatars -->
-        {#if participants.length > 0}
+        {#if !isRestaurant && participants.length > 0}
             <div class="mb-5 animate-fade-in" style="animation-delay:0.08s">
                 <!-- Avatar row -->
                 <div class="flex flex-wrap gap-2 mb-2.5">
@@ -591,7 +618,7 @@
                 style="animation-delay:0.1s"
             >
                 <div class="text-[0.78rem] font-medium text-text-light uppercase tracking-wider group-hover/toggle:text-wine transition-colors duration-200">
-                    {filteredWines.length}{filteredWines.length === 1 ? " vin" : " viner"}{#if selectedPerson}{" "}fra {selectedPerson}{/if}
+                    {filteredWines.length}{filteredWines.length === 1 ? " vin" : " viner"}{#if !isRestaurant && selectedPerson}{" "}fra {selectedPerson}{/if}
                 </div>
                 <div class="flex-1 h-px bg-cream-dark"></div>
                 <svg
@@ -616,6 +643,7 @@
                                 index={i}
                                 {currentUser}
                                 onRate={handleRate}
+                                hidePersonField={isRestaurant}
                             />
                         {/each}
                     </div>
@@ -656,6 +684,7 @@
                         onSubmit={editingWine ? handleEdit : handleAdd}
                         onCancel={() => (editingWineId = null)}
                         onPersonChange={(name) => (currentUser = name)}
+                        hidePersonField={isRestaurant}
                     />
                 {/key}
             </div>
