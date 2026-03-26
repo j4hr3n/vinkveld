@@ -25,7 +25,7 @@
   } = $props();
 
   let confirmingDelete = $state(false);
-  let initials = $derived(getInitials(wine.person));
+  let initials = $derived(getInitials(wine.person ?? ""));
 
   // Rating input — initialise from persisted value
   let ratingInput = $state<string>(

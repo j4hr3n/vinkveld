@@ -26,7 +26,7 @@ export interface Wine {
   id?: string;
   name: string;
   color: "red" | "white" | "rosé" | "bubbles";
-  person: string;
+  person?: string;
   notes: string;
   link: string;
   added: string;
@@ -39,19 +39,21 @@ export interface WineNight {
   date: string;
   created: string;
   completed?: boolean;
+  type?: "home" | "restaurant";
   wines?: Record<string, Wine>;
 }
 
 export async function updateNight(
   nightId: string,
-  data: Partial<Pick<WineNight, "title" | "date" | "completed">>
+  data: Partial<Pick<WineNight, "title" | "date" | "completed" | "type">>
 ): Promise<void> {
   await update(ref(db, `nights/${nightId}`), data);
 }
 
 export async function createNight(
   title: string,
-  date: string
+  date: string,
+  type?: "home" | "restaurant"
 ): Promise<string> {
   const nightsRef = ref(db, "nights");
   const newRef = push(nightsRef);
@@ -59,6 +61,7 @@ export async function createNight(
     title,
     date,
     created: new Date().toISOString(),
+    ...(type === "restaurant" ? { type } : {}),
   };
   await set(newRef, night);
   return newRef.key!;

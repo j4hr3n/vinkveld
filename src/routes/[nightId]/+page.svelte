@@ -95,7 +95,9 @@
     let participants = $derived.by(() => {
         const counts = new Map<string, number>();
         for (const w of wines) {
-            counts.set(w.person, (counts.get(w.person) ?? 0) + 1);
+            if (w.person) {
+                counts.set(w.person, (counts.get(w.person) ?? 0) + 1);
+            }
         }
         return [...counts.entries()].map(([name, count]) => ({ name, count }));
     });
