@@ -20,12 +20,14 @@
     let {
         editing = null,
         currentUser = '',
+        hidePersonField = false,
         onSubmit,
         onCancel,
         onPersonChange,
     }: {
         editing: (Wine & { id: string }) | null;
         currentUser?: string;
+        hidePersonField?: boolean;
         onSubmit: (data: {
             name: string;
             person: string;
@@ -68,15 +70,15 @@
             nameInput?.focus();
             return;
         }
-        if (!person.trim()) {
+        if (!hidePersonField && !person.trim()) {
             personInput?.focus();
             return;
         }
         submitting = true;
-        setUserName(person);
+        if (!hidePersonField) setUserName(person);
         await onSubmit({
             name: name.trim(),
-            person: person.trim(),
+            person: hidePersonField ? "" : person.trim(),
             color: selectedColor,
             link: link.trim(),
             notes: notes.trim(),
@@ -119,7 +121,7 @@
     </h3>
 
     <div class="flex gap-4 max-[480px]:flex-col max-[480px]:gap-0">
-        <div class="flex-[2] mb-5">
+        <div class="{hidePersonField ? 'flex-1' : 'flex-[2]'} mb-5">
             <label for="wine-name" class={fieldLabelClass}>Vin</label>
             <div class="flex gap-2">
                 <input
@@ -144,19 +146,19 @@
                 </button>
             </div>
         </div>
-        <div class="flex-1 mb-5">
-            <label for="wine-person" class={fieldLabelClass}
-                >Hvem tar med?</label
-            >
-            <input
-                type="text"
-                id="wine-person"
-                placeholder="Ditt navn"
-                bind:value={person}
-                bind:this={personInput}
-                class={fieldInputClass}
-            />
-        </div>
+        {#if !hidePersonField}
+            <div class="flex-1 mb-5">
+                <label for="wine-person" class={fieldLabelClass}>Hvem tar med?</label>
+                <input
+                    type="text"
+                    id="wine-person"
+                    placeholder="Ditt navn"
+                    bind:value={person}
+                    bind:this={personInput}
+                    class={fieldInputClass}
+                />
+            </div>
+        {/if}
     </div>
 
     <div class="mb-5">
