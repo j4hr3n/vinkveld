@@ -8,6 +8,7 @@
     wine,
     isEditing = false,
     completed = false,
+    hidePersonField = false,
     onEdit,
     onDelete,
     index = 0,
@@ -17,6 +18,7 @@
     wine: Wine & { id: string };
     isEditing: boolean;
     completed?: boolean;
+    hidePersonField?: boolean;
     onEdit: (id: string) => void;
     onDelete: (id: string) => void;
     index?: number;
@@ -87,13 +89,15 @@
 
   <!-- Top row: avatar + info + actions -->
   <div class="flex items-start gap-4">
-    <!-- Initials avatar -->
-    <div
-      class="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-[0.7rem] font-bold tracking-wide text-white/90 mt-0.5"
-      style="background: {stripeColors[wine.color] ?? '#999'}"
-    >
-      {initials}
-    </div>
+    {#if !hidePersonField}
+      <!-- Initials avatar -->
+      <div
+        class="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-[0.7rem] font-bold tracking-wide text-white/90 mt-0.5"
+        style="background: {stripeColors[wine.color] ?? '#999'}"
+      >
+        {initials}
+      </div>
+    {/if}
 
     <div class="flex-1 min-w-0">
       <div class="font-semibold text-[0.95rem] leading-snug">
@@ -114,8 +118,10 @@
         {/if}
       </div>
       <div class="text-text-light text-[0.85rem] mt-1 flex items-center gap-2">
-        <span>{wine.person}</span>
-        <span class="text-cream-dark">·</span>
+        {#if !hidePersonField && wine.person}
+          <span>{wine.person}</span>
+          <span class="text-cream-dark">·</span>
+        {/if}
         <span class="text-[0.8rem] opacity-70">{colorLabels[wine.color] ?? wine.color}</span>
       </div>
       {#if wine.notes}
