@@ -9,6 +9,7 @@
     let title = $state("");
     let date = $state(new Date().toISOString().split("T")[0]);
     let creating = $state(false);
+    let nightType = $state<"home" | "restaurant">("home");
     let history = $state(getHistory());
 
     onMount(() => {
@@ -46,7 +47,7 @@
             return;
         }
         creating = true;
-        const id = await createNight(title.trim(), date);
+        const id = await createNight(title.trim(), date, nightType);
         goto(`${base}/${id}`);
     }
 
@@ -109,6 +110,37 @@
             bind:value={date}
             class="w-full py-3 px-4 border-[1.5px] border-cream-dark rounded-xl text-base font-[inherit] transition-all duration-300 bg-cream/60 focus:outline-none focus:border-wine-light focus:bg-white focus:shadow-[0_0_0_3px_rgba(92,26,42,0.06)]"
         />
+    </div>
+    <div class="mb-7">
+        <div
+            class="block text-[0.82rem] font-medium text-text-light mb-2 uppercase tracking-wider"
+        >Sted</div>
+        <div class="grid grid-cols-2 gap-3">
+            <button
+                type="button"
+                class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-[1.5px] cursor-pointer transition-all duration-300 font-[inherit] text-[0.9rem] font-medium {nightType === 'home'
+                    ? 'border-wine bg-white shadow-[0_2px_8px_rgba(92,26,42,0.1)] text-wine'
+                    : 'border-cream-dark bg-cream/40 text-text-light hover:border-wine-light hover:bg-white/60'}"
+                onclick={() => (nightType = "home")}
+            >
+                <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M2 8l6-5 6 5M4 7v6h3v-3h2v3h3V7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Hjemme
+            </button>
+            <button
+                type="button"
+                class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-[1.5px] cursor-pointer transition-all duration-300 font-[inherit] text-[0.9rem] font-medium {nightType === 'restaurant'
+                    ? 'border-wine bg-white shadow-[0_2px_8px_rgba(92,26,42,0.1)] text-wine'
+                    : 'border-cream-dark bg-cream/40 text-text-light hover:border-wine-light hover:bg-white/60'}"
+                onclick={() => (nightType = "restaurant")}
+            >
+                <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M3 2v5c0 1.7 1.3 3 3 3h0c1.7 0 3-1.3 3-3V2M6 10v4M4 14h4M13 2v4c0 .6-.4 1-1 1h-1V2M11 7v7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Restaurant
+            </button>
+        </div>
     </div>
     <button
         class="w-full py-3.5 px-6 border-none rounded-xl text-base font-semibold font-[inherit] cursor-pointer transition-all duration-300 bg-wine text-white hover:bg-wine-dark hover:shadow-[0_4px_16px_rgba(92,26,42,0.25)] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
