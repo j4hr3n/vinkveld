@@ -9,6 +9,7 @@
     isEditing = false,
     completed = false,
     hidePersonField = false,
+    isPastEvent = false,
     onEdit,
     onDelete,
     index = 0,
@@ -19,6 +20,7 @@
     isEditing: boolean;
     completed?: boolean;
     hidePersonField?: boolean;
+    isPastEvent?: boolean;
     onEdit: (id: string) => void;
     onDelete: (id: string) => void;
     index?: number;
@@ -72,7 +74,7 @@
   }
 
   let showRatingSection = $derived(
-    (!completed && currentUser !== '') ||
+    (isPastEvent && !completed && currentUser !== '') ||
     (completed && ratingEntries.length > 0)
   );
 </script>

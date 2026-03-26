@@ -638,6 +638,7 @@
                                 {wine}
                                 isEditing={editingWineId === wine.id}
                                 {completed}
+                                {isPastEvent}
                                 onEdit={startEdit}
                                 onDelete={handleDelete}
                                 index={i}
