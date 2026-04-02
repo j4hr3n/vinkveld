@@ -14,6 +14,7 @@
     let isAdmin = $state(false);
     let allNights = $state<WineNight[]>([]);
     let loadingAllNights = $state(false);
+    let adminError = $state("");
 
     onMount(() => {
         const params = new URLSearchParams(window.location.search);
@@ -24,10 +25,18 @@
         if (isAdmin) {
             loadingAllNights = true;
             cleanups.push(
-                subscribeToAllNights((nights) => {
-                    allNights = nights;
-                    loadingAllNights = false;
-                })
+                subscribeToAllNights(
+                    (nights) => {
+                        allNights = nights;
+                        loadingAllNights = false;
+                    },
+                    (error) => {
+                        loadingAllNights = false;
+                        adminError = error.message.includes("permission_denied")
+                            ? "Mangler lesetilgang. Oppdater Firebase-reglene til å tillate lesing på /nights."
+                            : `Feil ved lasting: ${error.message}`;
+                    }
+                )
             );
         }
 
@@ -236,7 +245,11 @@
             <div class="flex-1 h-px bg-wine/30"></div>
         </div>
 
-        {#if loadingAllNights}
+        {#if adminError}
+            <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-800">
+                {adminError}
+            </div>
+        {:else if loadingAllNights}
             <p class="text-text-light text-sm italic">Laster alle vinkvelder...</p>
         {:else if allNights.length === 0}
             <p class="text-text-light text-sm italic">Ingen vinkvelder funnet.</p>

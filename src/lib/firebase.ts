@@ -82,20 +82,28 @@ export function subscribeToNight(
 }
 
 export function subscribeToAllNights(
-  callback: (nights: WineNight[]) => void
+  callback: (nights: WineNight[]) => void,
+  onError?: (error: Error) => void
 ): () => void {
-  const unsubscribe = onValue(ref(db, "nights"), (snapshot) => {
-    if (!snapshot.exists()) {
-      callback([]);
-      return;
+  const unsubscribe = onValue(
+    ref(db, "nights"),
+    (snapshot) => {
+      if (!snapshot.exists()) {
+        callback([]);
+        return;
+      }
+      const data = snapshot.val();
+      const nights: WineNight[] = Object.entries(data).map(
+        ([id, val]) => ({ id, ...(val as Omit<WineNight, "id">) })
+      );
+      nights.sort((a, b) => b.date.localeCompare(a.date));
+      callback(nights);
+    },
+    (error) => {
+      console.error("Failed to load all nights:", error);
+      onError?.(error);
     }
-    const data = snapshot.val();
-    const nights: WineNight[] = Object.entries(data).map(
-      ([id, val]) => ({ id, ...(val as Omit<WineNight, "id">) })
-    );
-    nights.sort((a, b) => b.date.localeCompare(a.date));
-    callback(nights);
-  });
+  );
   return unsubscribe;
 }
 
