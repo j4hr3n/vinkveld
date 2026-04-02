@@ -2,7 +2,7 @@
     import { onMount } from "svelte";
     import { goto } from "$app/navigation";
     import { base } from "$app/paths";
-    import { createNight, subscribeToNight } from "$lib/firebase";
+    import { createNight, subscribeToNight, subscribeToAllNights, type WineNight } from "$lib/firebase";
     import { getHistory, removeFromHistory, type HistoryEntry } from "$lib/history";
     import { formatDate } from "$lib/utils";
 
@@ -11,18 +11,38 @@
     let creating = $state(false);
     let nightType = $state<"home" | "restaurant">("home");
     let history = $state(getHistory());
+    let isAdmin = $state(false);
+    let allNights = $state<WineNight[]>([]);
+    let loadingAllNights = $state(false);
 
     onMount(() => {
+        const params = new URLSearchParams(window.location.search);
+        isAdmin = params.has("admin");
+
+        const cleanups: (() => void)[] = [];
+
+        if (isAdmin) {
+            loadingAllNights = true;
+            cleanups.push(
+                subscribeToAllNights((nights) => {
+                    allNights = nights;
+                    loadingAllNights = false;
+                })
+            );
+        }
+
         const entries = getHistory();
-        const unsubscribers = entries.map((entry) =>
-            subscribeToNight(entry.nightId, (night) => {
-                if (night === null) {
-                    removeFromHistory(entry.nightId);
-                    history = getHistory();
-                }
-            })
+        entries.forEach((entry) =>
+            cleanups.push(
+                subscribeToNight(entry.nightId, (night) => {
+                    if (night === null) {
+                        removeFromHistory(entry.nightId);
+                        history = getHistory();
+                    }
+                })
+            )
         );
-        return () => unsubscribers.forEach((u) => u());
+        return () => cleanups.forEach((u) => u());
     });
 
     let titleInput = $state<HTMLInputElement | null>(null);
@@ -204,5 +224,60 @@
     {/if}
 {/snippet}
 
-{@render historyGroup(upcoming, "Kommende vinkvelder", 0.3, true)}
-{@render historyGroup(past, "Tidligere vinkvelder", upcoming.length > 0 ? 0.3 + upcoming.length * 0.05 + 0.1 : 0.3, false)}
+{#if isAdmin}
+    <div class="mt-10 animate-rise-in" style="animation-delay: 0.3s">
+        <div class="flex items-center gap-3 mb-4">
+            <span class="inline-flex items-center gap-1.5 text-[0.82rem] font-medium text-wine uppercase tracking-wider">
+                <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M8 1.5l1.85 3.75L14 5.9l-3 2.92.7 4.1L8 11l-3.7 1.92.7-4.1-3-2.92 4.15-.65z" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Admin — Alle vinkvelder ({allNights.length})
+            </span>
+            <div class="flex-1 h-px bg-wine/30"></div>
+        </div>
+
+        {#if loadingAllNights}
+            <p class="text-text-light text-sm italic">Laster alle vinkvelder...</p>
+        {:else if allNights.length === 0}
+            <p class="text-text-light text-sm italic">Ingen vinkvelder funnet.</p>
+        {:else}
+            <div class="flex flex-col gap-2.5">
+                {#each allNights as night, i}
+                    <div
+                        class="relative animate-rise-in"
+                        style="animation-delay: {0.35 + i * 0.03}s"
+                    >
+                        <a
+                            href="{base}/{night.id}"
+                            class="block bg-white/80 backdrop-blur-sm rounded-xl p-4 no-underline border border-cream-dark/60 shadow-[0_2px_12px_rgba(92,26,42,0.04)] transition-all duration-200 hover:shadow-[0_4px_16px_rgba(92,26,42,0.1)] hover:border-wine-light/40"
+                        >
+                            <div class="flex items-center justify-between gap-3">
+                                <div>
+                                    <div class="text-wine font-semibold text-base">
+                                        {night.title}
+                                    </div>
+                                    <div class="font-accent italic text-sm mt-0.5 text-text-light">
+                                        {formatDate(night.date)}
+                                    </div>
+                                </div>
+                                <div class="text-right text-xs text-text-light shrink-0">
+                                    {#if night.wines}
+                                        <span>{Object.keys(night.wines).length} viner</span>
+                                    {:else}
+                                        <span class="opacity-50">0 viner</span>
+                                    {/if}
+                                    {#if night.type === "restaurant"}
+                                        <div class="mt-0.5 opacity-60">🍽 Restaurant</div>
+                                    {/if}
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                {/each}
+            </div>
+        {/if}
+    </div>
+{:else}
+    {@render historyGroup(upcoming, "Kommende vinkvelder", 0.3, true)}
+    {@render historyGroup(past, "Tidligere vinkvelder", upcoming.length > 0 ? 0.3 + upcoming.length * 0.05 + 0.1 : 0.3, false)}
+{/if}

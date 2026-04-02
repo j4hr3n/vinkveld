@@ -81,6 +81,24 @@ export function subscribeToNight(
   return unsubscribe;
 }
 
+export function subscribeToAllNights(
+  callback: (nights: WineNight[]) => void
+): () => void {
+  const unsubscribe = onValue(ref(db, "nights"), (snapshot) => {
+    if (!snapshot.exists()) {
+      callback([]);
+      return;
+    }
+    const data = snapshot.val();
+    const nights: WineNight[] = Object.entries(data).map(
+      ([id, val]) => ({ id, ...(val as Omit<WineNight, "id">) })
+    );
+    nights.sort((a, b) => b.date.localeCompare(a.date));
+    callback(nights);
+  });
+  return unsubscribe;
+}
+
 export async function addWine(
   nightId: string,
   wine: Omit<Wine, "id" | "added">
