@@ -51,12 +51,12 @@
         try {
             const registration: GrapeRegistration = {
                 wineName: wineName.trim(),
-                wineLink: wineLink.trim() || undefined,
                 wineColor,
                 dishName: dishName.trim(),
-                dishDescription: dishDescription.trim() || undefined,
                 registered: new Date().toISOString(),
             };
+            if (wineLink.trim()) registration.wineLink = wineLink.trim();
+            if (dishDescription.trim()) registration.dishDescription = dishDescription.trim();
             await setRegistration(nightId, pairId, registration);
         } finally {
             saving = false;
