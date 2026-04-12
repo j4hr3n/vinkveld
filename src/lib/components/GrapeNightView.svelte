@@ -121,63 +121,6 @@
             {/if}
         {/if}
 
-        <!-- Own pair registration form (before reveal) -->
-        {#if myPairId && myGrapeId && !isRevealed}
-            {#if myRegistration && !showRegistrationForm}
-                <button
-                    onclick={() => (showRegistrationForm = true)}
-                    class="w-full flex items-center gap-3 py-3 px-5 rounded-2xl border-[1.5px] border-dashed border-wine-light/40 bg-white/40 cursor-pointer transition-all duration-200 font-[inherit] text-left hover:bg-white/70 hover:border-wine-light/60"
-                >
-                    <svg class="w-4 h-4 text-wine/50 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <path d="M11 2l3 3-8 8H3v-3l8-8z" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <span class="text-[0.82rem] text-text-light">Endre din registrering</span>
-                </button>
-            {:else}
-                <div class="animate-rise-in">
-                    <GrapeRegistrationForm
-                        {nightId}
-                        pairId={myPairId}
-                        grapeId={myGrapeId}
-                        existingRegistration={myRegistration}
-                        pairNames={myPair?.memberNames ?? []}
-                    />
-                    {#if myRegistration}
-                        <button
-                            onclick={() => (showRegistrationForm = false)}
-                            class="w-full text-center text-[0.78rem] text-text-light/60 hover:text-wine cursor-pointer border-none bg-transparent font-[inherit] py-2 mt-1 transition-colors duration-200"
-                        >
-                            Skjul skjema
-                        </button>
-                    {/if}
-                </div>
-            {/if}
-        {/if}
-
-        <!-- All pairs gallery -->
-        <div>
-            <div class="flex items-center gap-3 mb-4 animate-fade-in">
-                <h3 class="text-[0.82rem] font-medium text-text-light uppercase tracking-wider">
-                    {isRevealed ? "Kveldens par" : "Par og druer"}
-                </h3>
-                <div class="flex-1 h-px bg-cream-dark"></div>
-            </div>
-
-            <div class="flex flex-col gap-4">
-                {#each pairs as pair, i (pair.id)}
-                    <GrapePairCard
-                        pairId={pair.id}
-                        {pair}
-                        grapeId={assignments[pair.id]}
-                        registration={registrations[pair.id]}
-                        isOwnPair={pair.id === myPairId}
-                        {isRevealed}
-                        index={i}
-                    />
-                {/each}
-            </div>
-        </div>
-
         <!-- Welcome message for users who haven't set their name -->
         {#if !currentUser}
             <div class="p-5 rounded-2xl bg-wine/[0.04] border border-wine-light/25 animate-rise-in">
@@ -243,5 +186,63 @@
                 </div>
             {/if}
         </div>
+
+        <!-- Own pair registration form (before reveal) -->
+        {#if myPairId && myGrapeId && !isRevealed}
+            {#if myRegistration && !showRegistrationForm}
+                <button
+                    onclick={() => (showRegistrationForm = true)}
+                    class="w-full flex items-center gap-3 py-3 px-5 rounded-2xl border-[1.5px] border-dashed border-wine-light/40 bg-white/40 cursor-pointer transition-all duration-200 font-[inherit] text-left hover:bg-white/70 hover:border-wine-light/60"
+                >
+                    <svg class="w-4 h-4 text-wine/50 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M11 2l3 3-8 8H3v-3l8-8z" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span class="text-[0.82rem] text-text-light">Endre din registrering</span>
+                </button>
+            {:else}
+                <div class="animate-rise-in">
+                    <GrapeRegistrationForm
+                        {nightId}
+                        pairId={myPairId}
+                        grapeId={myGrapeId}
+                        existingRegistration={myRegistration}
+                        pairNames={myPair?.memberNames ?? []}
+                    />
+                    {#if myRegistration}
+                        <button
+                            onclick={() => (showRegistrationForm = false)}
+                            class="w-full text-center text-[0.78rem] text-text-light/60 hover:text-wine cursor-pointer border-none bg-transparent font-[inherit] py-2 mt-1 transition-colors duration-200"
+                        >
+                            Skjul skjema
+                        </button>
+                    {/if}
+                </div>
+            {/if}
+        {/if}
+
+        <!-- All pairs gallery -->
+        <div>
+            <div class="flex items-center gap-3 mb-4 animate-fade-in">
+                <h3 class="text-[0.82rem] font-medium text-text-light uppercase tracking-wider">
+                    {isRevealed ? "Kveldens par" : "Par og druer"}
+                </h3>
+                <div class="flex-1 h-px bg-cream-dark"></div>
+            </div>
+
+            <div class="flex flex-col gap-4">
+                {#each pairs as pair, i (pair.id)}
+                    <GrapePairCard
+                        pairId={pair.id}
+                        {pair}
+                        grapeId={assignments[pair.id]}
+                        registration={registrations[pair.id]}
+                        isOwnPair={pair.id === myPairId}
+                        {isRevealed}
+                        index={i}
+                    />
+                {/each}
+            </div>
+        </div>
+
     {/if}
 </div>
