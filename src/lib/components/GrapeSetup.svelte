@@ -4,6 +4,7 @@
         removeParticipant,
         setPairs,
         clearPairs,
+        removePair,
         setNightGrapes,
         setGrapeAssignments,
         updateNight,
@@ -58,6 +59,10 @@
     let grapeSelectOpen = $state(false);
     let grapeSearch = $state("");
 
+    // Confirmation states
+    let confirmClearPairs = $state(false);
+    let confirmReshuffle = $state(false);
+
     let filteredGrapes = $derived.by(() => {
         const q = grapeSearch.toLowerCase();
         return GRAPES.filter(
@@ -103,7 +108,7 @@
         }
     }
 
-    async function confirmPair() {
+    async function confirmPairAction() {
         if (pairingQueue.length < 2) return;
         const newPair: GrapePair = {
             memberNames: [...pairingQueue],
@@ -119,6 +124,11 @@
         await clearPairs(nightId);
         pairingMode = false;
         pairingQueue = [];
+        confirmClearPairs = false;
+    }
+
+    async function handleRemovePair(pairId: string) {
+        await removePair(nightId, pairId);
     }
 
     function toggleGrapeSelection(grapeId: string) {
@@ -130,6 +140,10 @@
             current.push(grapeId);
         }
         setNightGrapes(nightId, current);
+        // Clear stale assignments if grape count no longer matches pair count
+        if (hasAssignments && current.length !== pairCount) {
+            setGrapeAssignments(nightId, {});
+        }
     }
 
     async function handleAssignGrapes() {
@@ -144,6 +158,7 @@
             newAssignments[pair.id] = shuffled[i];
         });
         await setGrapeAssignments(nightId, newAssignments);
+        confirmReshuffle = false;
     }
 
     async function handleReshuffle() {
@@ -175,7 +190,7 @@
                             {getInitials(p.name)}
                         </div>
                         <span class="text-sm font-medium text-text">{p.name}</span>
-                        {#if !pairedNames.has(p.name.toLowerCase())}
+                        {#if isAdmin && !pairedNames.has(p.name.toLowerCase())}
                             <button
                                 onclick={() => handleRemoveParticipant(p.id)}
                                 class="ml-0.5 p-0.5 rounded-full border-none bg-transparent text-text-light/40 cursor-pointer opacity-0 group-hover/chip:opacity-100 max-[480px]:opacity-100 transition-all duration-200 hover:text-wine hover:bg-wine/5"
@@ -191,22 +206,26 @@
             </div>
         {/if}
 
-        <div class="flex gap-2">
-            <input
-                type="text"
-                placeholder="Navn..."
-                bind:value={newName}
-                onkeydown={(e) => e.key === "Enter" && handleAddParticipant()}
-                class="flex-1 py-2.5 px-4 border-[1.5px] border-cream-dark rounded-xl text-sm font-[inherit] bg-cream/60 focus:outline-none focus:border-wine-light focus:bg-white transition-all duration-300"
-            />
-            <button
-                onclick={handleAddParticipant}
-                disabled={!newName.trim() || addingName}
-                class="px-4 py-2.5 rounded-xl text-sm font-semibold font-[inherit] cursor-pointer bg-wine text-white border-none hover:bg-wine-dark transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-                Legg til
-            </button>
-        </div>
+        {#if isAdmin}
+            <div class="flex gap-2">
+                <input
+                    type="text"
+                    placeholder="Navn..."
+                    bind:value={newName}
+                    onkeydown={(e) => e.key === "Enter" && handleAddParticipant()}
+                    class="flex-1 py-2.5 px-4 border-[1.5px] border-cream-dark rounded-xl text-sm font-[inherit] bg-cream/60 focus:outline-none focus:border-wine-light focus:bg-white transition-all duration-300"
+                />
+                <button
+                    onclick={handleAddParticipant}
+                    disabled={!newName.trim() || addingName}
+                    class="px-4 py-2.5 rounded-xl text-sm font-semibold font-[inherit] cursor-pointer bg-wine text-white border-none hover:bg-wine-dark transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                    Legg til
+                </button>
+            </div>
+        {:else if participants.length === 0}
+            <p class="text-text-light text-sm italic">Arrangøren legger til deltakere.</p>
+        {/if}
     </section>
 
     <!-- Step 2: Pairs -->
@@ -217,13 +236,31 @@
                     Par ({pairCount})
                 </h3>
                 <div class="flex-1 h-px bg-cream-dark"></div>
-                {#if pairs.length > 0}
-                    <button
-                        onclick={handleClearPairs}
-                        class="text-[0.75rem] text-text-light/60 hover:text-wine cursor-pointer border-none bg-transparent font-[inherit] transition-colors duration-200"
-                    >
-                        Nullstill
-                    </button>
+                {#if isAdmin && pairs.length > 0}
+                    {#if confirmClearPairs}
+                        <div class="flex items-center gap-2">
+                            <span class="text-[0.72rem] text-wine">Fjerne alle par?</span>
+                            <button
+                                onclick={handleClearPairs}
+                                class="text-[0.72rem] text-white bg-wine px-2 py-0.5 rounded font-[inherit] border-none cursor-pointer hover:bg-wine-dark transition-colors duration-200"
+                            >
+                                Ja
+                            </button>
+                            <button
+                                onclick={() => (confirmClearPairs = false)}
+                                class="text-[0.72rem] text-text-light bg-transparent px-2 py-0.5 rounded font-[inherit] border border-cream-dark cursor-pointer hover:border-wine-light transition-colors duration-200"
+                            >
+                                Nei
+                            </button>
+                        </div>
+                    {:else}
+                        <button
+                            onclick={() => (confirmClearPairs = true)}
+                            class="text-[0.75rem] text-text-light/60 hover:text-wine cursor-pointer border-none bg-transparent font-[inherit] transition-colors duration-200"
+                        >
+                            Nullstill
+                        </button>
+                    {/if}
                 {/if}
             </div>
 
@@ -232,7 +269,7 @@
                 <div class="flex flex-col gap-2 mb-4">
                     {#each pairs as pair, i}
                         <div
-                            class="flex items-center gap-2 py-2.5 px-4 rounded-xl bg-white/60 border border-cream-dark/50 animate-rise-in"
+                            class="flex items-center gap-2 py-2.5 px-4 rounded-xl bg-white/60 border border-cream-dark/50 animate-rise-in group/pair"
                             style="animation-delay: {i * 0.04}s"
                         >
                             {#each pair.memberNames as name, ni}
@@ -254,13 +291,24 @@
                                     {getGrapeById(assignments[pair.id])?.name ?? assignments[pair.id]}
                                 </span>
                             {/if}
+                            {#if isAdmin}
+                                <button
+                                    onclick={() => handleRemovePair(pair.id)}
+                                    class="ml-auto p-1 rounded-lg border-none bg-transparent text-text-light/30 cursor-pointer opacity-0 group-hover/pair:opacity-100 max-[480px]:opacity-100 transition-all duration-200 hover:text-wine hover:bg-wine/5"
+                                    aria-label="Fjern par"
+                                >
+                                    <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round"/>
+                                    </svg>
+                                </button>
+                            {/if}
                         </div>
                     {/each}
                 </div>
             {/if}
 
-            <!-- Pairing mode -->
-            {#if unpairedParticipants.length >= 2}
+            <!-- Pairing mode (admin only) -->
+            {#if isAdmin && unpairedParticipants.length >= 2}
                 {#if !pairingMode}
                     <button
                         onclick={startPairing}
@@ -293,7 +341,7 @@
                         </div>
                         <div class="flex gap-2">
                             <button
-                                onclick={confirmPair}
+                                onclick={confirmPairAction}
                                 disabled={pairingQueue.length < 2}
                                 class="px-4 py-2 rounded-lg text-sm font-semibold font-[inherit] cursor-pointer bg-wine text-white border-none hover:bg-wine-dark transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
                             >
@@ -308,12 +356,14 @@
                         </div>
                     </div>
                 {/if}
+            {:else if !isAdmin && pairs.length === 0}
+                <p class="text-text-light text-sm italic">Arrangøren oppretter par.</p>
             {/if}
         </section>
     {/if}
 
-    <!-- Step 3: Select grapes & assign -->
-    {#if pairCount > 0}
+    <!-- Step 3: Select grapes & assign (admin only) -->
+    {#if pairCount > 0 && isAdmin}
         <section class="animate-rise-in">
             <div class="flex items-center gap-3 mb-4">
                 <h3 class="text-[0.82rem] font-medium text-text-light uppercase tracking-wider">
@@ -412,9 +462,25 @@
                         >
                             Tildel druer tilfeldig
                         </button>
+                    {:else if confirmReshuffle}
+                        <div class="flex-1 flex items-center gap-3 py-3 px-4 rounded-xl border-[1.5px] border-wine/30 bg-wine/[0.03]">
+                            <span class="text-sm text-text flex-1">Trekke på nytt? Nåværende tildeling fjernes.</span>
+                            <button
+                                onclick={handleReshuffle}
+                                class="px-3 py-1.5 rounded-lg text-[0.78rem] font-semibold font-[inherit] cursor-pointer bg-wine text-white border-none hover:bg-wine-dark transition-all duration-200"
+                            >
+                                Bekreft
+                            </button>
+                            <button
+                                onclick={() => (confirmReshuffle = false)}
+                                class="px-3 py-1.5 rounded-lg text-[0.78rem] font-medium font-[inherit] cursor-pointer bg-transparent text-text-light border border-cream-dark hover:border-wine-light transition-all duration-200"
+                            >
+                                Avbryt
+                            </button>
+                        </div>
                     {:else}
                         <button
-                            onclick={handleReshuffle}
+                            onclick={() => (confirmReshuffle = true)}
                             class="flex-1 py-3 px-4 rounded-xl text-sm font-semibold font-[inherit] cursor-pointer bg-transparent text-wine border-[1.5px] border-wine hover:bg-wine/5 transition-all duration-200"
                         >
                             Trekk på nytt
