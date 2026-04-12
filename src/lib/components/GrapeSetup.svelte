@@ -6,13 +6,16 @@
         clearPairs,
         setNightGrapes,
         setGrapeAssignments,
+        updateNight,
         type WineNight,
         type GrapePair,
     } from "$lib/firebase";
     import { GRAPES, getGrapeById } from "$lib/grapes";
     import { getInitials } from "$lib/utils";
 
-    let { night, nightId }: { night: WineNight; nightId: string } = $props();
+    let { night, nightId, isAdmin = false }: { night: WineNight; nightId: string; isAdmin?: boolean } = $props();
+
+    let isRevealed = $derived(night.revealed === true);
 
     let newName = $state("");
     let addingName = $state(false);
@@ -424,6 +427,43 @@
                     {/if}
                 </div>
             {/if}
+        </section>
+    {/if}
+
+    <!-- Reveal toggle (admin only, after assignments) -->
+    {#if isAdmin && hasAssignments}
+        <section class="animate-rise-in">
+            <div class="flex items-center gap-3 mb-4">
+                <h3 class="text-[0.82rem] font-medium text-text-light uppercase tracking-wider">
+                    Synlighet
+                </h3>
+                <div class="flex-1 h-px bg-cream-dark"></div>
+            </div>
+            <button
+                onclick={() => updateNight(nightId, { revealed: !isRevealed })}
+                class="w-full flex items-center gap-3 py-3 px-4 rounded-xl border-[1.5px] cursor-pointer transition-all duration-200 font-[inherit] text-left {isRevealed
+                    ? 'border-sage bg-sage/5 hover:bg-sage/10'
+                    : 'border-cream-dark bg-white/60 hover:border-wine-light'}"
+            >
+                {#if isRevealed}
+                    <svg class="w-5 h-5 text-sage shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/>
+                        <circle cx="8" cy="8" r="2"/>
+                    </svg>
+                    <div>
+                        <div class="text-sm font-medium text-sage">Vin og rett er synlig for alle</div>
+                        <div class="text-[0.75rem] text-text-light mt-0.5">Trykk for å skjule igjen</div>
+                    </div>
+                {:else}
+                    <svg class="w-5 h-5 text-text-light shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M2 2l12 12M4.5 6.5C3.2 7.3 2 8 2 8s2.5 5 7 5c1 0 1.9-.3 2.7-.7M7 3.2c.3-.1.6-.2 1-.2 4.5 0 7 5 7 5s-.7 1.4-2 2.7" stroke-linecap="round"/>
+                    </svg>
+                    <div>
+                        <div class="text-sm font-medium text-text">Vin og rett er skjult</div>
+                        <div class="text-[0.75rem] text-text-light mt-0.5">Hvert par kan kun se sin egen registrering. Trykk for å avsløre for alle.</div>
+                    </div>
+                {/if}
+            </button>
         </section>
     {/if}
 

@@ -63,6 +63,7 @@ export interface WineNight {
   completed?: boolean;
   type?: NightType;
   wines?: Record<string, Wine>;
+  revealed?: boolean;
   grapes?: string[];
   participants?: Record<string, GrapeParticipant>;
   pairs?: Record<string, GrapePair>;
@@ -72,7 +73,7 @@ export interface WineNight {
 
 export async function updateNight(
   nightId: string,
-  data: Partial<Pick<WineNight, "title" | "date" | "completed" | "type">>
+  data: Partial<Pick<WineNight, "title" | "date" | "completed" | "type" | "revealed">>
 ): Promise<void> {
   await update(ref(db, `nights/${nightId}`), data);
 }

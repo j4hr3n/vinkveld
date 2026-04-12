@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { WineNight } from "$lib/firebase";
+    import { updateNight, type WineNight } from "$lib/firebase";
     import GrapeSetup from "./GrapeSetup.svelte";
     import GrapePairCard from "./GrapePairCard.svelte";
     import GrapeRegistrationForm from "./GrapeRegistrationForm.svelte";
@@ -8,13 +8,11 @@
         night,
         nightId,
         currentUser,
-        isPastEvent,
         isAdmin = false,
     }: {
         night: WineNight;
         nightId: string;
         currentUser: string;
-        isPastEvent: boolean;
         isAdmin?: boolean;
     } = $props();
 
@@ -28,7 +26,7 @@
     let hasAssignments = $derived(Object.keys(assignments).length > 0);
     let registrations = $derived(night.registrations ?? {});
 
-    let isRevealed = $derived(isPastEvent);
+    let isRevealed = $derived(night.revealed === true);
 
     let myPairId = $derived.by(() => {
         if (!currentUser || !night.pairs) return null;
@@ -54,27 +52,54 @@
 <div class="space-y-6">
     <!-- Setup phase: always show setup when not fully configured -->
     {#if !isSetupComplete}
-        <GrapeSetup {night} {nightId} />
+        <GrapeSetup {night} {nightId} {isAdmin} />
     {:else}
         <!-- Registration / reveal phase -->
 
-        <!-- Toggle to re-open setup for editing (admin only) -->
-        {#if !isRevealed && isAdmin}
+        <!-- Admin controls -->
+        {#if isAdmin}
+            <div class="flex items-center gap-3 animate-fade-in">
+                <!-- Reveal toggle -->
+                <button
+                    onclick={() => updateNight(nightId, { revealed: !isRevealed })}
+                    class="flex items-center gap-2 py-2 px-4 rounded-xl border-[1.5px] cursor-pointer transition-all duration-200 font-[inherit] text-[0.82rem] font-medium {isRevealed
+                        ? 'border-sage bg-sage/10 text-sage'
+                        : 'border-cream-dark bg-white/60 text-text-light hover:border-wine-light hover:text-wine'}"
+                >
+                    {#if isRevealed}
+                        <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/>
+                            <circle cx="8" cy="8" r="2"/>
+                        </svg>
+                        Synlig for alle
+                    {:else}
+                        <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M2 2l12 12M4.5 6.5C3.2 7.3 2 8 2 8s2.5 5 7 5c1 0 1.9-.3 2.7-.7M7 3.2c.3-.1.6-.2 1-.2 4.5 0 7 5 7 5s-.7 1.4-2 2.7" stroke-linecap="round"/>
+                        </svg>
+                        Skjult for andre
+                    {/if}
+                </button>
+
+                <!-- Edit setup toggle -->
+                {#if showSetup}
+                    <button
+                        onclick={() => (showSetup = false)}
+                        class="text-[0.78rem] text-wine/70 hover:text-wine cursor-pointer border-none bg-transparent font-[inherit] font-medium transition-colors duration-200"
+                    >
+                        Skjul oppsett
+                    </button>
+                {:else}
+                    <button
+                        onclick={() => (showSetup = true)}
+                        class="text-[0.78rem] text-text-light/60 hover:text-wine cursor-pointer border-none bg-transparent font-[inherit] transition-colors duration-200"
+                    >
+                        Endre oppsett
+                    </button>
+                {/if}
+            </div>
+
             {#if showSetup}
-                <GrapeSetup {night} {nightId} />
-                <button
-                    onclick={() => (showSetup = false)}
-                    class="w-full text-center text-[0.78rem] text-text-light/60 hover:text-wine cursor-pointer border-none bg-transparent font-[inherit] py-2 transition-colors duration-200"
-                >
-                    Skjul oppsett
-                </button>
-            {:else}
-                <button
-                    onclick={() => (showSetup = true)}
-                    class="w-full text-center text-[0.78rem] text-text-light/60 hover:text-wine cursor-pointer border-none bg-transparent font-[inherit] py-2 transition-colors duration-200"
-                >
-                    Endre oppsett
-                </button>
+                <GrapeSetup {night} {nightId} {isAdmin} />
             {/if}
         {/if}
 

@@ -547,7 +547,7 @@
         </div>
 
         {#if isGrape}
-            <GrapeNightView {night} nightId={nightId!} {currentUser} {isPastEvent} {isAdmin} />
+            <GrapeNightView {night} nightId={nightId!} {currentUser} {isAdmin} />
         {:else}
             <!-- Participant avatars -->
             {#if !isRestaurant && participants.length > 0}
