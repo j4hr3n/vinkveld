@@ -2,14 +2,14 @@
     import { onMount } from "svelte";
     import { goto } from "$app/navigation";
     import { base } from "$app/paths";
-    import { createNight, subscribeToNight, subscribeToAllNights, type WineNight } from "$lib/firebase";
+    import { createNight, subscribeToNight, subscribeToAllNights, type WineNight, type NightType } from "$lib/firebase";
     import { getHistory, removeFromHistory, type HistoryEntry } from "$lib/history";
     import { formatDate } from "$lib/utils";
 
     let title = $state("");
     let date = $state(new Date().toISOString().split("T")[0]);
     let creating = $state(false);
-    let nightType = $state<"home" | "restaurant">("home");
+    let nightType = $state<NightType>("home");
     let history = $state(getHistory());
     let isAdmin = $state(false);
     let allNights = $state<WineNight[]>([]);
@@ -144,7 +144,7 @@
         <div
             class="block text-[0.82rem] font-medium text-text-light mb-2 uppercase tracking-wider"
         >Sted</div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-3 gap-3">
             <button
                 type="button"
                 class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-[1.5px] cursor-pointer transition-all duration-300 font-[inherit] text-[0.9rem] font-medium {nightType === 'home'
@@ -168,6 +168,22 @@
                     <path d="M3 2v5c0 1.7 1.3 3 3 3h0c1.7 0 3-1.3 3-3V2M6 10v4M4 14h4M13 2v4c0 .6-.4 1-1 1h-1V2M11 7v7" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
                 Restaurant
+            </button>
+            <button
+                type="button"
+                class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-[1.5px] cursor-pointer transition-all duration-300 font-[inherit] text-[0.9rem] font-medium {nightType === 'grape'
+                    ? 'border-wine bg-white shadow-[0_2px_8px_rgba(92,26,42,0.1)] text-wine'
+                    : 'border-cream-dark bg-cream/40 text-text-light hover:border-wine-light hover:bg-white/60'}"
+                onclick={() => (nightType = "grape")}
+            >
+                <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="8" cy="5" r="2"/>
+                    <circle cx="5.5" cy="8" r="2"/>
+                    <circle cx="10.5" cy="8" r="2"/>
+                    <circle cx="8" cy="11" r="2"/>
+                    <path d="M8 3V1M9 1.5l1.5-1" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Druekvelder
             </button>
         </div>
     </div>
@@ -281,6 +297,8 @@
                                     {/if}
                                     {#if night.type === "restaurant"}
                                         <div class="mt-0.5 opacity-60">🍽 Restaurant</div>
+                                    {:else if night.type === "grape"}
+                                        <div class="mt-0.5 opacity-60">🍇 Druekvelder</div>
                                     {/if}
                                 </div>
                             </div>

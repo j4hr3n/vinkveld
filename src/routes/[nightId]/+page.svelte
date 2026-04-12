@@ -11,10 +11,12 @@
         setWineRating,
         type WineNight,
         type Wine,
+        type NightType,
     } from "$lib/firebase";
     import WineCard from "$lib/components/WineCard.svelte";
     import WineForm from "$lib/components/WineForm.svelte";
     import WineResults from "$lib/components/WineResults.svelte";
+    import GrapeNightView from "$lib/components/GrapeNightView.svelte";
     import CopiedToast from "$lib/components/CopiedToast.svelte";
     import { addToHistory } from "$lib/history";
     import { colorOrder } from "$lib/colors";
@@ -32,7 +34,7 @@
     let editingHeader = $state(false);
     let editTitle = $state('');
     let editDate = $state('');
-    let editType = $state<"home" | "restaurant">("home");
+    let editType = $state<NightType>("home");
     let savingHeader = $state(false);
 
     // Feature: Rate without adding a wine
@@ -71,6 +73,7 @@
 
     let completed = $derived(night?.completed ?? false);
     let isRestaurant = $derived((night?.type ?? "home") === "restaurant");
+    let isGrape = $derived((night?.type ?? "home") === "grape");
 
     $effect(() => {
         if (isRestaurant) selectedPerson = null;
@@ -99,6 +102,9 @@
     });
 
     let participants = $derived.by(() => {
+        if (isGrape && night?.participants) {
+            return Object.values(night.participants).map((p) => ({ name: p.name, count: 0 }));
+        }
         const counts = new Map<string, number>();
         for (const w of wines) {
             if (w.person) {
@@ -356,7 +362,7 @@
                     Ny vinkveld
                 </a>
                 <div class="flex items-center gap-2">
-                    {#if isPastEvent}
+                    {#if isPastEvent && !isGrape}
                         {#if completed}
                             <button
                                 class="inline-flex items-center gap-1.5 bg-sage/15 text-sage px-2.5 py-1.5 rounded-lg text-[0.78rem] font-medium font-[inherit] border-none cursor-pointer hover:bg-sage/25 transition-all duration-200"
@@ -420,7 +426,7 @@
                     </button>
 
                     <!-- Profile button -->
-                    {#if wines.length > 0 || isRestaurant}
+                    {#if wines.length > 0 || isRestaurant || isGrape}
                         {#if isKnownParticipant}
                             <button
                                 bind:this={profileButtonEl}
@@ -482,6 +488,15 @@
                         >
                             Restaurant
                         </button>
+                        <button
+                            type="button"
+                            class="flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-[0.82rem] font-medium font-[inherit] cursor-pointer transition-all duration-200 border-[1.5px] {editType === 'grape'
+                                ? 'border-wine bg-wine/5 text-wine'
+                                : 'border-cream-dark bg-transparent text-text-light hover:border-wine-light'}"
+                            onclick={() => (editType = "grape")}
+                        >
+                            Druekvelder
+                        </button>
                     </div>
                     <div class="flex gap-2 mt-2">
                         <button
@@ -527,168 +542,172 @@
 
         </div>
 
-        <!-- Participant avatars -->
-        {#if !isRestaurant && participants.length > 0}
-            <div class="mb-5 animate-fade-in" style="animation-delay:0.08s">
-                <!-- Avatar row -->
-                <div class="flex flex-wrap gap-2 mb-2.5">
-                    {#each participants as p, i}
-                        <button
-                            class="flex items-center gap-2 py-1.5 px-3 rounded-full border-none cursor-pointer transition-all duration-300 font-[inherit] {selectedPerson ===
-                            p.name
-                                ? 'bg-white shadow-[0_2px_12px_rgba(92,26,42,0.12)] scale-105 ring-2 ring-wine/30'
-                                : 'bg-white/50 hover:bg-white/80 hover:shadow-[0_1px_6px_rgba(92,26,42,0.06)]'}"
-                            onclick={() => togglePerson(p.name)}
-                            style="animation-delay: {i * 0.04}s"
-                        >
-                            <div
-                                class="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[0.6rem] font-bold tracking-wide text-white/90"
-                                style="background: {getAvatarColor(p.name)}"
-                            >
-                                {getInitials(p.name)}
-                            </div>
-                            <span
-                                class="text-[0.8rem] font-medium {selectedPerson ===
-                                p.name
-                                    ? 'text-wine'
-                                    : 'text-text-light'}">{p.name}</span
-                            >
-                        </button>
-                    {/each}
-                </div>
-            </div>
-        {/if}
-
-        <!-- Wine list -->
-        {#if wines.length === 0}
-            <div
-                class="text-center py-12 px-4 animate-rise-in"
-                style="animation-delay:0.15s"
-            >
-                <div class="inline-block relative mb-4">
-                    <svg
-                        viewBox="0 0 80 100"
-                        class="w-16 h-20 mx-auto"
-                        fill="none"
-                    >
-                        <path
-                            d="M24 8h32l-3 36c-.8 8-6 14-13 14s-12.2-6-13-14L24 8z"
-                            stroke="#5c1a2a"
-                            stroke-width="1.2"
-                            opacity="0.15"
-                        />
-                        <path
-                            d="M30 20h20l-1.5 18c-.5 5-3.5 9-8.5 9s-8-4-8.5-9L30 20z"
-                            fill="#5c1a2a"
-                            opacity="0.05"
-                        />
-                        <line
-                            x1="40"
-                            y1="58"
-                            x2="40"
-                            y2="78"
-                            stroke="#5c1a2a"
-                            stroke-width="1.2"
-                            opacity="0.15"
-                        />
-                        <line
-                            x1="30"
-                            y1="78"
-                            x2="50"
-                            y2="78"
-                            stroke="#5c1a2a"
-                            stroke-width="1.2"
-                            opacity="0.15"
-                            stroke-linecap="round"
-                        />
-                    </svg>
-                </div>
-                <p class="font-accent italic text-text-light text-base">
-                    Ingen viner ennå
-                </p>
-                <p class="text-text-light text-[0.82rem] mt-1 opacity-70">
-                    {completed ? "Ingen viner ble lagt til" : "Legg til den første nedenfor"}
-                </p>
-            </div>
+        {#if isGrape}
+            <GrapeNightView {night} nightId={nightId!} {currentUser} {isPastEvent} />
         {:else}
-            <!-- Section label / toggle -->
-            <button
-                onclick={() => (winesOpen = !winesOpen)}
-                class="w-full flex items-center gap-3 mb-3 animate-fade-in bg-transparent border-none p-0 cursor-pointer group/toggle"
-                style="animation-delay:0.1s"
-            >
-                <div class="text-[0.78rem] font-medium text-text-light uppercase tracking-wider group-hover/toggle:text-wine transition-colors duration-200">
-                    {filteredWines.length}{filteredWines.length === 1 ? " vin" : " viner"}{#if !isRestaurant && selectedPerson}{" "}fra {selectedPerson}{/if}
-                </div>
-                <div class="flex-1 h-px bg-cream-dark"></div>
-                <svg
-                    class="w-3.5 h-3.5 text-text-light group-hover/toggle:text-wine shrink-0 transition-all duration-300 {winesOpen ? 'rotate-0' : '-rotate-90'}"
-                    viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"
-                >
-                    <path d="M4 6l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </button>
-
-            <!-- Collapsible wine list -->
-            <div class="grid transition-[grid-template-rows] duration-[360ms] ease-[cubic-bezier(0.22,1,0.36,1)] {winesOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}">
-                <div class="overflow-hidden">
-                    <div class="flex flex-col gap-3 mb-8">
-                        {#each filteredWines as wine, i (wine.id)}
-                            <WineCard
-                                {wine}
-                                isEditing={editingWineId === wine.id}
-                                {completed}
-                                {isPastEvent}
-                                onEdit={startEdit}
-                                onDelete={handleDelete}
-                                index={i}
-                                {currentUser}
-                                onRate={handleRate}
-                                hidePersonField={isRestaurant}
-                            />
+            <!-- Participant avatars -->
+            {#if !isRestaurant && participants.length > 0}
+                <div class="mb-5 animate-fade-in" style="animation-delay:0.08s">
+                    <!-- Avatar row -->
+                    <div class="flex flex-wrap gap-2 mb-2.5">
+                        {#each participants as p, i}
+                            <button
+                                class="flex items-center gap-2 py-1.5 px-3 rounded-full border-none cursor-pointer transition-all duration-300 font-[inherit] {selectedPerson ===
+                                p.name
+                                    ? 'bg-white shadow-[0_2px_12px_rgba(92,26,42,0.12)] scale-105 ring-2 ring-wine/30'
+                                    : 'bg-white/50 hover:bg-white/80 hover:shadow-[0_1px_6px_rgba(92,26,42,0.06)]'}"
+                                onclick={() => togglePerson(p.name)}
+                                style="animation-delay: {i * 0.04}s"
+                            >
+                                <div
+                                    class="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[0.6rem] font-bold tracking-wide text-white/90"
+                                    style="background: {getAvatarColor(p.name)}"
+                                >
+                                    {getInitials(p.name)}
+                                </div>
+                                <span
+                                    class="text-[0.8rem] font-medium {selectedPerson ===
+                                    p.name
+                                        ? 'text-wine'
+                                        : 'text-text-light'}">{p.name}</span
+                                >
+                            </button>
                         {/each}
                     </div>
                 </div>
-            </div>
-        {/if}
+            {/if}
 
-        <!-- Results podium -->
-        {#if completed && wines.length > 0}
-            <WineResults {wines} />
-        {/if}
+            <!-- Wine list -->
+            {#if wines.length === 0}
+                <div
+                    class="text-center py-12 px-4 animate-rise-in"
+                    style="animation-delay:0.15s"
+                >
+                    <div class="inline-block relative mb-4">
+                        <svg
+                            viewBox="0 0 80 100"
+                            class="w-16 h-20 mx-auto"
+                            fill="none"
+                        >
+                            <path
+                                d="M24 8h32l-3 36c-.8 8-6 14-13 14s-12.2-6-13-14L24 8z"
+                                stroke="#5c1a2a"
+                                stroke-width="1.2"
+                                opacity="0.15"
+                            />
+                            <path
+                                d="M30 20h20l-1.5 18c-.5 5-3.5 9-8.5 9s-8-4-8.5-9L30 20z"
+                                fill="#5c1a2a"
+                                opacity="0.05"
+                            />
+                            <line
+                                x1="40"
+                                y1="58"
+                                x2="40"
+                                y2="78"
+                                stroke="#5c1a2a"
+                                stroke-width="1.2"
+                                opacity="0.15"
+                            />
+                            <line
+                                x1="30"
+                                y1="78"
+                                x2="50"
+                                y2="78"
+                                stroke="#5c1a2a"
+                                stroke-width="1.2"
+                                opacity="0.15"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                    </div>
+                    <p class="font-accent italic text-text-light text-base">
+                        Ingen viner ennå
+                    </p>
+                    <p class="text-text-light text-[0.82rem] mt-1 opacity-70">
+                        {completed ? "Ingen viner ble lagt til" : "Legg til den første nedenfor"}
+                    </p>
+                </div>
+            {:else}
+                <!-- Section label / toggle -->
+                <button
+                    onclick={() => (winesOpen = !winesOpen)}
+                    class="w-full flex items-center gap-3 mb-3 animate-fade-in bg-transparent border-none p-0 cursor-pointer group/toggle"
+                    style="animation-delay:0.1s"
+                >
+                    <div class="text-[0.78rem] font-medium text-text-light uppercase tracking-wider group-hover/toggle:text-wine transition-colors duration-200">
+                        {filteredWines.length}{filteredWines.length === 1 ? " vin" : " viner"}{#if !isRestaurant && selectedPerson}{" "}fra {selectedPerson}{/if}
+                    </div>
+                    <div class="flex-1 h-px bg-cream-dark"></div>
+                    <svg
+                        class="w-3.5 h-3.5 text-text-light group-hover/toggle:text-wine shrink-0 transition-all duration-300 {winesOpen ? 'rotate-0' : '-rotate-90'}"
+                        viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"
+                    >
+                        <path d="M4 6l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
 
-        <!-- Form -->
-        <div
-            class="h-px bg-cream-dark mb-6 animate-fade-in"
-            style="animation-delay:0.2s"
-        ></div>
+                <!-- Collapsible wine list -->
+                <div class="grid transition-[grid-template-rows] duration-[360ms] ease-[cubic-bezier(0.22,1,0.36,1)] {winesOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}">
+                    <div class="overflow-hidden">
+                        <div class="flex flex-col gap-3 mb-8">
+                            {#each filteredWines as wine, i (wine.id)}
+                                <WineCard
+                                    {wine}
+                                    isEditing={editingWineId === wine.id}
+                                    {completed}
+                                    {isPastEvent}
+                                    onEdit={startEdit}
+                                    onDelete={handleDelete}
+                                    index={i}
+                                    {currentUser}
+                                    onRate={handleRate}
+                                    hidePersonField={isRestaurant}
+                                />
+                            {/each}
+                        </div>
+                    </div>
+                </div>
+            {/if}
 
-        {#if completed}
-            <div class="text-center py-8 animate-fade-in">
-                <p class="font-accent italic text-text-light text-base mb-1">
-                    Vinkvelden er fullført
-                </p>
-                <p class="text-text-light text-[0.82rem] opacity-70">
-                    Ingen flere viner kan legges til
-                </p>
-            </div>
-        {:else}
+            <!-- Results podium -->
+            {#if completed && wines.length > 0}
+                <WineResults {wines} />
+            {/if}
+
+            <!-- Form -->
             <div
-                bind:this={formElement}
-                class="animate-rise-in"
-                style="animation-delay:0.25s"
-            >
-                {#key editingWineId}
-                    <WineForm
-                        editing={editingWine}
-                        {currentUser}
-                        onSubmit={editingWine ? handleEdit : handleAdd}
-                        onCancel={() => (editingWineId = null)}
-                        onPersonChange={(name) => (currentUser = name)}
-                        hidePersonField={isRestaurant}
-                    />
-                {/key}
-            </div>
+                class="h-px bg-cream-dark mb-6 animate-fade-in"
+                style="animation-delay:0.2s"
+            ></div>
+
+            {#if completed}
+                <div class="text-center py-8 animate-fade-in">
+                    <p class="font-accent italic text-text-light text-base mb-1">
+                        Vinkvelden er fullført
+                    </p>
+                    <p class="text-text-light text-[0.82rem] opacity-70">
+                        Ingen flere viner kan legges til
+                    </p>
+                </div>
+            {:else}
+                <div
+                    bind:this={formElement}
+                    class="animate-rise-in"
+                    style="animation-delay:0.25s"
+                >
+                    {#key editingWineId}
+                        <WineForm
+                            editing={editingWine}
+                            {currentUser}
+                            onSubmit={editingWine ? handleEdit : handleAdd}
+                            onCancel={() => (editingWineId = null)}
+                            onPersonChange={(name) => (currentUser = name)}
+                            hidePersonField={isRestaurant}
+                        />
+                    {/key}
+                </div>
+            {/if}
         {/if}
     </div>
 
