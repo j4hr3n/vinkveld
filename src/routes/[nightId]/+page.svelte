@@ -40,8 +40,9 @@
     // Feature: Rate without adding a wine
     let raterNameInput = $state('');
 
-    // Profile popover — open by default if no user is set
-    let profileOpen = $state(!getUserName());
+    // Profile popover — open by default if no user is set (except grape nights)
+    let profileOpen = $state(false);
+    let profileAutoOpened = $state(false);
 
     // Position the auto-opened popover once the profile button enters the DOM
     $effect(() => {
@@ -165,6 +166,13 @@
     $effect(() => {
         if (night && nightId) {
             addToHistory(nightId, night.title, night.date);
+        }
+    });
+
+    $effect(() => {
+        if (night && !profileAutoOpened && !getUserName() && !isGrape) {
+            profileOpen = true;
+            profileAutoOpened = true;
         }
     });
 
