@@ -199,8 +199,10 @@ export async function setPairs(
 }
 
 export async function clearPairs(nightId: string): Promise<void> {
-  await remove(ref(db, `nights/${nightId}/pairs`));
-  await remove(ref(db, `nights/${nightId}/grapeAssignments`));
+  await update(ref(db, `nights/${nightId}`), {
+    pairs: null,
+    grapeAssignments: null,
+  });
 }
 
 export async function setNightGrapes(
