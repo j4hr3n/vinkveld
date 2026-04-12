@@ -430,7 +430,7 @@
         </section>
     {/if}
 
-    <!-- Reveal toggle (admin only, after assignments) -->
+    <!-- Reveal settings (admin only, after assignments) -->
     {#if isAdmin && hasAssignments}
         <section class="animate-rise-in">
             <div class="flex items-center gap-3 mb-4">
@@ -439,31 +439,58 @@
                 </h3>
                 <div class="flex-1 h-px bg-cream-dark"></div>
             </div>
-            <button
-                onclick={() => updateNight(nightId, { revealed: !isRevealed })}
-                class="w-full flex items-center gap-3 py-3 px-4 rounded-xl border-[1.5px] cursor-pointer transition-all duration-200 font-[inherit] text-left {isRevealed
-                    ? 'border-sage bg-sage/5 hover:bg-sage/10'
-                    : 'border-cream-dark bg-white/60 hover:border-wine-light'}"
-            >
-                {#if isRevealed}
-                    <svg class="w-5 h-5 text-sage shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/>
-                        <circle cx="8" cy="8" r="2"/>
-                    </svg>
-                    <div>
-                        <div class="text-sm font-medium text-sage">Vin og rett er synlig for alle</div>
-                        <div class="text-[0.75rem] text-text-light mt-0.5">Trykk for å skjule igjen</div>
-                    </div>
-                {:else}
+
+            <div class="space-y-3">
+                <!-- Scheduled reveal time -->
+                <div class="flex items-center gap-3 py-3 px-4 rounded-xl border-[1.5px] border-cream-dark bg-white/60">
                     <svg class="w-5 h-5 text-text-light shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <path d="M2 2l12 12M4.5 6.5C3.2 7.3 2 8 2 8s2.5 5 7 5c1 0 1.9-.3 2.7-.7M7 3.2c.3-.1.6-.2 1-.2 4.5 0 7 5 7 5s-.7 1.4-2 2.7" stroke-linecap="round"/>
+                        <circle cx="8" cy="8" r="6.5"/>
+                        <path d="M8 4v4l3 2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                    <div>
-                        <div class="text-sm font-medium text-text">Vin og rett er skjult</div>
-                        <div class="text-[0.75rem] text-text-light mt-0.5">Hvert par kan kun se sin egen registrering. Trykk for å avsløre for alle.</div>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium text-text">Avsløres automatisk</div>
+                        <div class="text-[0.75rem] text-text-light mt-0.5">
+                            {night.date ? `Den ${night.date}` : "På kveldsdagen"} kl.
+                        </div>
                     </div>
-                {/if}
-            </button>
+                    <input
+                        type="time"
+                        value={night.revealTime ?? ""}
+                        onchange={(e) => {
+                            const val = (e.target as HTMLInputElement).value;
+                            updateNight(nightId, { revealTime: val || "" });
+                        }}
+                        class="py-1.5 px-2.5 border-[1.5px] border-cream-dark rounded-lg text-sm font-[inherit] bg-cream/40 focus:outline-none focus:border-wine-light focus:bg-white transition-all duration-200 w-24"
+                    />
+                </div>
+
+                <!-- Manual override -->
+                <button
+                    onclick={() => updateNight(nightId, { revealed: !isRevealed })}
+                    class="w-full flex items-center gap-3 py-3 px-4 rounded-xl border-[1.5px] cursor-pointer transition-all duration-200 font-[inherit] text-left {isRevealed
+                        ? 'border-sage bg-sage/5 hover:bg-sage/10'
+                        : 'border-cream-dark bg-white/60 hover:border-wine-light'}"
+                >
+                    {#if isRevealed}
+                        <svg class="w-5 h-5 text-sage shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/>
+                            <circle cx="8" cy="8" r="2"/>
+                        </svg>
+                        <div>
+                            <div class="text-sm font-medium text-sage">Vin og rett er synlig for alle</div>
+                            <div class="text-[0.75rem] text-text-light mt-0.5">Trykk for å skjule igjen</div>
+                        </div>
+                    {:else}
+                        <svg class="w-5 h-5 text-text-light shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M2 2l12 12M4.5 6.5C3.2 7.3 2 8 2 8s2.5 5 7 5c1 0 1.9-.3 2.7-.7M7 3.2c.3-.1.6-.2 1-.2 4.5 0 7 5 7 5s-.7 1.4-2 2.7" stroke-linecap="round"/>
+                        </svg>
+                        <div>
+                            <div class="text-sm font-medium text-text">Avsløre nå</div>
+                            <div class="text-[0.75rem] text-text-light mt-0.5">Trykk for å gjøre vin og rett synlig for alle umiddelbart</div>
+                        </div>
+                    {/if}
+                </button>
+            </div>
         </section>
     {/if}
 

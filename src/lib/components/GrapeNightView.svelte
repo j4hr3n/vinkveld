@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import { updateNight, type WineNight } from "$lib/firebase";
     import GrapeSetup from "./GrapeSetup.svelte";
     import GrapePairCard from "./GrapePairCard.svelte";
@@ -26,7 +27,22 @@
     let hasAssignments = $derived(Object.keys(assignments).length > 0);
     let registrations = $derived(night.registrations ?? {});
 
-    let isRevealed = $derived(night.revealed === true);
+    // Ticking clock for scheduled reveal
+    let now = $state(new Date());
+
+    onMount(() => {
+        const interval = setInterval(() => { now = new Date(); }, 30_000);
+        return () => clearInterval(interval);
+    });
+
+    let scheduledReveal = $derived.by(() => {
+        if (!night.revealTime || !night.date) return false;
+        const revealAt = new Date(`${night.date}T${night.revealTime}`);
+        return now >= revealAt;
+    });
+
+    let isRevealed = $derived(night.revealed === true || scheduledReveal);
+    let isManuallyRevealed = $derived(night.revealed === true);
 
     let myPairId = $derived.by(() => {
         if (!currentUser || !night.pairs) return null;
@@ -58,10 +74,10 @@
 
         <!-- Admin controls -->
         {#if isAdmin}
-            <div class="flex items-center gap-3 animate-fade-in">
+            <div class="flex items-center gap-3 animate-fade-in flex-wrap">
                 <!-- Reveal toggle -->
                 <button
-                    onclick={() => updateNight(nightId, { revealed: !isRevealed })}
+                    onclick={() => updateNight(nightId, { revealed: !isManuallyRevealed })}
                     class="flex items-center gap-2 py-2 px-4 rounded-xl border-[1.5px] cursor-pointer transition-all duration-200 font-[inherit] text-[0.82rem] font-medium {isRevealed
                         ? 'border-sage bg-sage/10 text-sage'
                         : 'border-cream-dark bg-white/60 text-text-light hover:border-wine-light hover:text-wine'}"
