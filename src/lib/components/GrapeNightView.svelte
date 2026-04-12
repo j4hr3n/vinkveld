@@ -307,6 +307,7 @@
                             grapeId={myGrapeId}
                             existingRegistration={myRegistration}
                             pairNames={myPair?.memberNames ?? []}
+                            onSaved={() => (showRegistrationForm = false)}
                         />
                     {/key}
                     {#if myRegistration}
@@ -319,6 +320,13 @@
                     {/if}
                 </div>
             {/if}
+        {/if}
+
+        <!-- Spectator message: has name but not in a pair -->
+        {#if currentUser && !myPairId && !isRevealed}
+            <div class="py-3 px-4 rounded-xl bg-cream/40 border border-cream-dark/40 text-sm text-text-light italic animate-fade-in">
+                Du er ikke med i et par. Kontakt arrangøren hvis du skal delta.
+            </div>
         {/if}
 
         <!-- All pairs gallery -->

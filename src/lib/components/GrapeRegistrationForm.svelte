@@ -16,12 +16,14 @@
         grapeId,
         existingRegistration,
         pairNames,
+        onSaved,
     }: {
         nightId: string;
         pairId: string;
         grapeId: string;
         existingRegistration?: GrapeRegistration;
         pairNames: string[];
+        onSaved?: () => void;
     } = $props();
 
     let grape = $derived(getGrapeById(grapeId));
@@ -36,6 +38,8 @@
     let dishDescription = $state(existingRegistration?.dishDescription ?? "");
 
     let saving = $state(false);
+    let saved = $state(false);
+    let error = $state("");
     let searchOpen = $state(false);
 
     const colors: { value: WineColor; label: string; bg: string; border?: string }[] = [
@@ -48,6 +52,7 @@
     async function handleSubmit() {
         if (!wineName.trim() || !dishName.trim()) return;
         saving = true;
+        error = "";
         try {
             const registration: GrapeRegistration = {
                 wineName: wineName.trim(),
@@ -58,6 +63,10 @@
             if (wineLink.trim()) registration.wineLink = wineLink.trim();
             if (dishDescription.trim()) registration.dishDescription = dishDescription.trim();
             await setRegistration(nightId, pairId, registration);
+            saved = true;
+            setTimeout(() => onSaved?.(), 1200);
+        } catch (e) {
+            error = "Kunne ikke lagre. Prøv igjen.";
         } finally {
             saving = false;
         }
@@ -169,13 +178,31 @@
         ></textarea>
     </div>
 
+    <!-- Feedback -->
+    {#if error}
+        <div class="py-2 px-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm animate-fade-in">
+            {error}
+        </div>
+    {/if}
+
+    {#if saved}
+        <div class="py-3 px-4 rounded-xl bg-sage/10 border border-sage/30 text-sage text-sm font-medium flex items-center gap-2 animate-fade-in">
+            <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 8l4 4 6-7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Registrering lagret!
+        </div>
+    {/if}
+
     <!-- Submit -->
     <button
         onclick={handleSubmit}
-        disabled={!wineName.trim() || !dishName.trim() || saving}
-        class="w-full py-3.5 px-6 rounded-xl text-base font-semibold font-[inherit] cursor-pointer transition-all duration-300 bg-wine text-white border-none hover:bg-wine-dark hover:shadow-[0_4px_16px_rgba(92,26,42,0.25)] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled={!wineName.trim() || !dishName.trim() || saving || saved}
+        class="w-full py-3.5 px-6 rounded-xl text-base font-semibold font-[inherit] cursor-pointer transition-all duration-300 border-none active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed {saved
+            ? 'bg-sage text-white'
+            : 'bg-wine text-white hover:bg-wine-dark hover:shadow-[0_4px_16px_rgba(92,26,42,0.25)]'}"
     >
-        {saving ? "Lagrer..." : existingRegistration ? "Oppdater registrering" : "Registrer vin og rett"}
+        {saving ? "Lagrer..." : saved ? "Lagret!" : existingRegistration ? "Oppdater registrering" : "Registrer vin og rett"}
     </button>
 </div>
 
