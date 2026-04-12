@@ -11,7 +11,7 @@
         type GrapePair,
     } from "$lib/firebase";
     import { GRAPES, getGrapeById } from "$lib/grapes";
-    import { getInitials } from "$lib/utils";
+    import { getInitials, getAvatarColor } from "$lib/utils";
 
     let { night, nightId, isAdmin = false }: { night: WineNight; nightId: string; isAdmin?: boolean } = $props();
 
@@ -69,15 +69,6 @@
 
     let redGrapes = $derived(filteredGrapes.filter((g) => g.color === "red"));
     let whiteGrapes = $derived(filteredGrapes.filter((g) => g.color === "white"));
-
-    function getAvatarColor(name: string): string {
-        let hash = 0;
-        for (let i = 0; i < name.length; i++) {
-            hash = name.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        const hue = ((hash % 360) + 360) % 360;
-        return `hsl(${hue}, 40%, 35%)`;
-    }
 
     async function handleAddParticipant() {
         const trimmed = newName.trim();
@@ -143,7 +134,11 @@
 
     async function handleAssignGrapes() {
         if (selectedGrapes.length !== pairCount) return;
-        const shuffled = [...selectedGrapes].sort(() => Math.random() - 0.5);
+        const shuffled = [...selectedGrapes];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
         const newAssignments: Record<string, string> = {};
         pairs.forEach((pair, i) => {
             newAssignments[pair.id] = shuffled[i];

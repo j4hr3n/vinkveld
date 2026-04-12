@@ -20,7 +20,7 @@
     import CopiedToast from "$lib/components/CopiedToast.svelte";
     import { addToHistory } from "$lib/history";
     import { colorOrder } from "$lib/colors";
-    import { getInitials, formatDate } from "$lib/utils";
+    import { getInitials, getAvatarColor, formatDate } from "$lib/utils";
     import { getUserName, setUserName } from "$lib/identity";
 
     let nightId = $derived(page.params.nightId);
@@ -130,15 +130,6 @@
             ? (wines.find((w) => w.id === editingWineId) ?? null)
             : null,
     );
-
-    function getAvatarColor(name: string): string {
-        let hash = 0;
-        for (let i = 0; i < name.length; i++) {
-            hash = name.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        const hue = ((hash % 360) + 360) % 360;
-        return `hsl(${hue}, 40%, 35%)`;
-    }
 
     function togglePerson(name: string) {
         selectedPerson = selectedPerson === name ? null : name;

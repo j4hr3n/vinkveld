@@ -2,7 +2,7 @@
   import { untrack } from "svelte";
   import type { Wine } from "$lib/firebase";
   import { stripeColors, colorLabels, bgTints } from "$lib/colors";
-  import { getInitials } from "$lib/utils";
+  import { getInitials, getAvatarColor } from "$lib/utils";
 
   let {
     wine,
@@ -64,14 +64,6 @@
     return Math.round(sum / ratingEntries.length);
   });
 
-  function getAvatarColor(name: string): string {
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-      hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const hue = ((hash % 360) + 360) % 360;
-    return `hsl(${hue}, 40%, 35%)`;
-  }
 
   let showRatingSection = $derived(
     (isPastEvent && !completed && currentUser !== '') ||

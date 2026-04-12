@@ -1,6 +1,6 @@
 <script lang="ts">
     import { getGrapeById } from "$lib/grapes";
-    import { getInitials } from "$lib/utils";
+    import { getInitials, getAvatarColor } from "$lib/utils";
     import GrapeInfoCard from "./GrapeInfoCard.svelte";
     import type { GrapePair, GrapeRegistration } from "$lib/firebase";
 
@@ -24,15 +24,6 @@
 
     let grape = $derived(grapeId ? getGrapeById(grapeId) : undefined);
     let canSeeRegistration = $derived(isOwnPair || isRevealed);
-
-    function getAvatarColor(name: string): string {
-        let hash = 0;
-        for (let i = 0; i < name.length; i++) {
-            hash = name.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        const hue = ((hash % 360) + 360) % 360;
-        return `hsl(${hue}, 40%, 35%)`;
-    }
 </script>
 
 <div
