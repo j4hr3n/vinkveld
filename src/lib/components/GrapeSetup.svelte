@@ -435,7 +435,7 @@
                 <path d="M8 4.5v4M8 11v.5" stroke-linecap="round"/>
             </svg>
             <div class="text-[0.82rem] text-text-light leading-relaxed">
-                <p class="font-medium text-text mb-1">Slik fungerer druekvelder</p>
+                <p class="font-medium text-text mb-1">Slik fungerer drueaften</p>
                 <p>Hvert par tildeles en drue og velger en vin med den druen, samt en rett som passer til. Valgene holdes hemmelig for de andre parene frem til kvelden.</p>
             </div>
         </div>

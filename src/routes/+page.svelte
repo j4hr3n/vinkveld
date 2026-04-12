@@ -183,7 +183,7 @@
                     <circle cx="8" cy="11" r="2"/>
                     <path d="M8 3V1M9 1.5l1.5-1" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                Druekvelder
+                Drueaften
             </button>
         </div>
     </div>
@@ -298,7 +298,7 @@
                                     {#if night.type === "restaurant"}
                                         <div class="mt-0.5 opacity-60">🍽 Restaurant</div>
                                     {:else if night.type === "grape"}
-                                        <div class="mt-0.5 opacity-60">🍇 Druekvelder</div>
+                                        <div class="mt-0.5 opacity-60">🍇 Drueaften</div>
                                     {/if}
                                 </div>
                             </div>

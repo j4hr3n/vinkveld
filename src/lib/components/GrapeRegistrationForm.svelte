@@ -83,7 +83,7 @@
             <h3 class="text-base font-semibold text-wine">Registrer vin og rett</h3>
         </div>
         <p class="text-[0.82rem] text-text-light">
-            {pairNames.join(" & ")} — velg en vin og rett til druekveldet
+            {pairNames.join(" & ")} — velg en vin og rett til drueaftenen
         </p>
     </div>
 

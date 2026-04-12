@@ -495,7 +495,7 @@
                                 : 'border-cream-dark bg-transparent text-text-light hover:border-wine-light'}"
                             onclick={() => (editType = "grape")}
                         >
-                            Druekvelder
+                            Drueaften
                         </button>
                     </div>
                     <div class="flex gap-2 mt-2">
