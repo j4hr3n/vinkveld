@@ -62,6 +62,7 @@
     // Confirmation states
     let confirmClearPairs = $state(false);
     let confirmReshuffle = $state(false);
+    let confirmReveal = $state(false);
 
     let filteredGrapes = $derived.by(() => {
         const q = grapeSearch.toLowerCase();
@@ -526,13 +527,11 @@
                 </div>
 
                 <!-- Manual override -->
-                <button
-                    onclick={() => updateNight(nightId, { revealed: !isRevealed })}
-                    class="w-full flex items-center gap-3 py-3 px-4 rounded-xl border-[1.5px] cursor-pointer transition-all duration-200 font-[inherit] text-left {isRevealed
-                        ? 'border-sage bg-sage/5 hover:bg-sage/10'
-                        : 'border-cream-dark bg-white/60 hover:border-wine-light'}"
-                >
-                    {#if isRevealed}
+                {#if isRevealed}
+                    <button
+                        onclick={() => updateNight(nightId, { revealed: false })}
+                        class="w-full flex items-center gap-3 py-3 px-4 rounded-xl border-[1.5px] cursor-pointer transition-all duration-200 font-[inherit] text-left border-sage bg-sage/5 hover:bg-sage/10"
+                    >
                         <svg class="w-5 h-5 text-sage shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
                             <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/>
                             <circle cx="8" cy="8" r="2"/>
@@ -541,16 +540,37 @@
                             <div class="text-sm font-medium text-sage">Vin og rett er synlig for alle</div>
                             <div class="text-[0.75rem] text-text-light mt-0.5">Trykk for å skjule igjen</div>
                         </div>
-                    {:else}
+                    </button>
+                {:else if confirmReveal}
+                    <div class="w-full flex items-center gap-3 py-3 px-4 rounded-xl border-[1.5px] border-wine/30 bg-wine/[0.03]">
+                        <span class="text-sm text-text flex-1">Avsløre vin og rett for alle?</span>
+                        <button
+                            onclick={() => { updateNight(nightId, { revealed: true }); confirmReveal = false; }}
+                            class="px-3 py-1.5 rounded-lg text-[0.78rem] font-semibold font-[inherit] cursor-pointer bg-wine text-white border-none hover:bg-wine-dark transition-all duration-200"
+                        >
+                            Bekreft
+                        </button>
+                        <button
+                            onclick={() => (confirmReveal = false)}
+                            class="px-3 py-1.5 rounded-lg text-[0.78rem] font-medium font-[inherit] cursor-pointer bg-transparent text-text-light border border-cream-dark hover:border-wine-light transition-all duration-200"
+                        >
+                            Avbryt
+                        </button>
+                    </div>
+                {:else}
+                    <button
+                        onclick={() => (confirmReveal = true)}
+                        class="w-full flex items-center gap-3 py-3 px-4 rounded-xl border-[1.5px] cursor-pointer transition-all duration-200 font-[inherit] text-left border-cream-dark bg-white/60 hover:border-wine-light"
+                    >
                         <svg class="w-5 h-5 text-text-light shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
                             <path d="M2 2l12 12M4.5 6.5C3.2 7.3 2 8 2 8s2.5 5 7 5c1 0 1.9-.3 2.7-.7M7 3.2c.3-.1.6-.2 1-.2 4.5 0 7 5 7 5s-.7 1.4-2 2.7" stroke-linecap="round"/>
                         </svg>
                         <div>
                             <div class="text-sm font-medium text-text">Avsløre nå</div>
-                            <div class="text-[0.75rem] text-text-light mt-0.5">Trykk for å gjøre vin og rett synlig for alle umiddelbart</div>
+                            <div class="text-[0.75rem] text-text-light mt-0.5">Gjør vin og rett synlig for alle umiddelbart</div>
                         </div>
-                    {/if}
-                </button>
+                    </button>
+                {/if}
             </div>
         </section>
     {/if}

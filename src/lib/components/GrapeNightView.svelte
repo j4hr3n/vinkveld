@@ -43,8 +43,12 @@
         return now >= revealAt;
     });
 
-    let isRevealed = $derived(night.revealed === true || scheduledReveal);
-    let isManuallyRevealed = $derived(night.revealed === true);
+    // revealed === true  -> force show
+    // revealed === false -> force hide (overrides schedule)
+    // revealed absent    -> follow schedule
+    let isRevealed = $derived(
+        night.revealed === true || (night.revealed !== false && scheduledReveal)
+    );
 
     let myPairId = $derived.by(() => {
         if (!currentUser || !night.pairs) return null;
@@ -87,13 +91,8 @@
             <div class="flex items-center gap-3 animate-fade-in flex-wrap">
                 <!-- Reveal toggle -->
                 <button
-                    onclick={() => {
-                        if (isRevealed) {
-                            updateNight(nightId, { revealed: false, revealTime: "" });
-                        } else {
-                            updateNight(nightId, { revealed: true });
-                        }
-                    }}
+                    onclick={() =>
+                        updateNight(nightId, { revealed: !isRevealed })}
                     class="flex items-center gap-2 py-2 px-4 rounded-xl border-[1.5px] cursor-pointer transition-all duration-200 font-[inherit] text-[0.82rem] font-medium {isRevealed
                         ? 'border-sage bg-sage/10 text-sage'
                         : 'border-cream-dark bg-white/60 text-text-light hover:border-wine-light hover:text-wine'}"
