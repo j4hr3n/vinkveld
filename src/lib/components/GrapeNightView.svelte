@@ -58,6 +58,7 @@
     let isSetupComplete = $derived(pairs.length > 0 && hasAssignments);
     let showSetup = $state(false);
     let showRegistrationForm = $state(false);
+    let showHelp = $state(false);
 
     let myGrapeId = $derived(myPairId ? assignments[myPairId] : undefined);
     let myRegistration = $derived(myPairId ? registrations[myPairId] : undefined);
@@ -177,19 +178,70 @@
             </div>
         </div>
 
-        <!-- Format info (not own pair or spectator) -->
-        {#if !myPairId && !isRevealed}
-            <div class="p-4 rounded-xl bg-wine/[0.03] border border-wine-light/20 animate-fade-in">
-                <div class="flex items-start gap-3">
-                    <svg class="w-5 h-5 text-wine/50 shrink-0 mt-0.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <circle cx="8" cy="8" r="7"/>
-                        <path d="M8 4.5v4M8 11v.5" stroke-linecap="round"/>
-                    </svg>
-                    <div class="text-[0.82rem] text-text-light leading-relaxed">
-                        <p>Sett navnet ditt i profilen for å se ditt pars registrering og legge inn vin og rett.</p>
+        <!-- Welcome message for users who haven't set their name -->
+        {#if !currentUser}
+            <div class="p-5 rounded-2xl bg-wine/[0.04] border border-wine-light/25 animate-rise-in">
+                <div class="flex items-start gap-3 mb-3">
+                    <div class="text-2xl shrink-0">🍇</div>
+                    <div>
+                        <h3 class="text-base font-semibold text-wine mb-1">Velkommen til drueaften!</h3>
+                        <p class="text-[0.85rem] text-text-light leading-relaxed">
+                            Dere er delt inn i par, og hvert par har fått tildelt en drue.
+                            Oppgaven er å velge en vin med den druen og en rett som passer til.
+                        </p>
+                    </div>
+                </div>
+                <div class="ml-9 p-3 rounded-xl bg-white/60 border border-cream-dark/40">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-wine/60 shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="8" cy="5.5" r="2.5"/>
+                            <path d="M2.5 14c0-2.8 2.46-4.5 5.5-4.5s5.5 1.7 5.5 4.5" stroke-linecap="round"/>
+                        </svg>
+                        <span class="text-[0.82rem] text-text">Trykk på profil-knappen oppe til høyre og skriv inn navnet ditt for å komme i gang.</span>
                     </div>
                 </div>
             </div>
         {/if}
+
+        <!-- Help button -->
+        <div class="animate-fade-in">
+            <button
+                onclick={() => (showHelp = !showHelp)}
+                class="flex items-center gap-1.5 text-[0.78rem] text-text-light/50 hover:text-wine/70 cursor-pointer border-none bg-transparent font-[inherit] transition-colors duration-200 py-1"
+            >
+                <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="8" cy="8" r="7"/>
+                    <path d="M6 6.5a2 2 0 1 1 2.5 1.9c-.3.1-.5.4-.5.7V10" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="8" cy="12" r="0.5" fill="currentColor"/>
+                </svg>
+                Hvordan fungerer drueaften?
+            </button>
+
+            {#if showHelp}
+                <div class="mt-2 p-4 rounded-xl bg-wine/[0.03] border border-wine-light/20 animate-fade-in space-y-3">
+                    <div class="flex items-start gap-2.5">
+                        <span class="text-base shrink-0 mt-0.5">🍷</span>
+                        <div class="text-[0.82rem] text-text-light leading-relaxed">
+                            <p class="font-medium text-text mb-0.5">Par og druer</p>
+                            <p>Alle deltakere deles inn i par. Hvert par tildeles en druetype og skal finne en vin laget med den druen, pluss en rett som passer til.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2.5">
+                        <span class="text-base shrink-0 mt-0.5">🧪</span>
+                        <div class="text-[0.82rem] text-text-light leading-relaxed">
+                            <p class="font-medium text-text mb-0.5">Trenger ikke være 100%</p>
+                            <p>Vinen trenger ikke være laget av kun den tildelte druen. Det holder at den er hoveddruen i en blending, eller at den er godt representert i vinen.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2.5">
+                        <span class="text-base shrink-0 mt-0.5">🤫</span>
+                        <div class="text-[0.82rem] text-text-light leading-relaxed">
+                            <p class="font-medium text-text mb-0.5">Hemmelig til kvelden</p>
+                            <p>Hvilken vin og rett hvert par velger holdes skjult fra de andre frem til avsløringen.</p>
+                        </div>
+                    </div>
+                </div>
+            {/if}
+        </div>
     {/if}
 </div>
