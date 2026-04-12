@@ -8,6 +8,12 @@ import {
   remove,
   onValue,
 } from "firebase/database";
+import {
+  getStorage,
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+} from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -21,16 +27,40 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const storage = getStorage(app);
+
+export type WineColor = "red" | "white" | "rosé" | "bubbles";
+export type NightType = "home" | "restaurant" | "grape";
 
 export interface Wine {
   id?: string;
   name: string;
-  color: "red" | "white" | "rosé" | "bubbles";
+  color: WineColor;
   person?: string;
   notes: string;
   link: string;
   added: string;
   ratings?: Record<string, number>;
+}
+
+export interface GrapeParticipant {
+  name: string;
+  added: string;
+}
+
+export interface GrapePair {
+  memberNames: string[];
+  created: string;
+}
+
+export interface GrapeRegistration {
+  wineName: string;
+  wineLink?: string;
+  wineColor?: WineColor;
+  dishName: string;
+  dishDescription?: string;
+  dishImageUrl?: string;
+  registered: string;
 }
 
 export interface WineNight {
@@ -39,8 +69,13 @@ export interface WineNight {
   date: string;
   created: string;
   completed?: boolean;
-  type?: "home" | "restaurant";
+  type?: NightType;
   wines?: Record<string, Wine>;
+  grapes?: string[];
+  participants?: Record<string, GrapeParticipant>;
+  pairs?: Record<string, GrapePair>;
+  grapeAssignments?: Record<string, string>;
+  registrations?: Record<string, GrapeRegistration>;
 }
 
 export async function updateNight(
@@ -53,7 +88,7 @@ export async function updateNight(
 export async function createNight(
   title: string,
   date: string,
-  type?: "home" | "restaurant"
+  type?: NightType
 ): Promise<string> {
   const nightsRef = ref(db, "nights");
   const newRef = push(nightsRef);
@@ -61,7 +96,7 @@ export async function createNight(
     title,
     date,
     created: new Date().toISOString(),
-    ...(type === "restaurant" ? { type } : {}),
+    ...(type && type !== "home" ? { type } : {}),
   };
   await set(newRef, night);
   return newRef.key!;
@@ -141,5 +176,69 @@ export async function setWineRating(
   score: number
 ): Promise<void> {
   await set(ref(db, `nights/${nightId}/wines/${wineId}/ratings/${personName}`), score);
+}
+
+// --- Grape night functions ---
+
+export async function addParticipant(
+  nightId: string,
+  name: string
+): Promise<string> {
+  const participantsRef = ref(db, `nights/${nightId}/participants`);
+  const newRef = push(participantsRef);
+  await set(newRef, { name, added: new Date().toISOString() });
+  return newRef.key!;
+}
+
+export async function removeParticipant(
+  nightId: string,
+  participantId: string
+): Promise<void> {
+  await remove(ref(db, `nights/${nightId}/participants/${participantId}`));
+}
+
+export async function setPairs(
+  nightId: string,
+  pairs: Record<string, GrapePair>
+): Promise<void> {
+  await set(ref(db, `nights/${nightId}/pairs`), pairs);
+}
+
+export async function clearPairs(nightId: string): Promise<void> {
+  await remove(ref(db, `nights/${nightId}/pairs`));
+  await remove(ref(db, `nights/${nightId}/grapeAssignments`));
+}
+
+export async function setNightGrapes(
+  nightId: string,
+  grapeIds: string[]
+): Promise<void> {
+  await set(ref(db, `nights/${nightId}/grapes`), grapeIds);
+}
+
+export async function setGrapeAssignments(
+  nightId: string,
+  assignments: Record<string, string>
+): Promise<void> {
+  await set(ref(db, `nights/${nightId}/grapeAssignments`), assignments);
+}
+
+export async function setRegistration(
+  nightId: string,
+  pairId: string,
+  registration: GrapeRegistration
+): Promise<void> {
+  await set(ref(db, `nights/${nightId}/registrations/${pairId}`), registration);
+}
+
+export async function uploadDishImage(
+  nightId: string,
+  pairId: string,
+  file: File
+): Promise<string> {
+  const path = `nights/${nightId}/dishes/${pairId}`;
+  const sRef = storageRef(storage, path);
+  await uploadBytes(sRef, file);
+  return getDownloadURL(sRef);
 }
 
