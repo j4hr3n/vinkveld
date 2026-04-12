@@ -1,7 +1,6 @@
 <script lang="ts">
     import {
         setRegistration,
-        uploadDishImage,
         type GrapeRegistration,
         type WineColor,
     } from "$lib/firebase";
@@ -35,14 +34,9 @@
     // Dish fields
     let dishName = $state(existingRegistration?.dishName ?? "");
     let dishDescription = $state(existingRegistration?.dishDescription ?? "");
-    let dishImageUrl = $state(existingRegistration?.dishImageUrl ?? "");
 
     let saving = $state(false);
-    let uploading = $state(false);
     let searchOpen = $state(false);
-    let imagePreview = $state(existingRegistration?.dishImageUrl ?? "");
-
-    let fileInput = $state<HTMLInputElement | null>(null);
 
     const colors: { value: WineColor; label: string; bg: string; border?: string }[] = [
         { value: "red", label: "Rød", bg: "#5c1a2a" },
@@ -50,40 +44,6 @@
         { value: "rosé", label: "Rosé", bg: "#e8909a" },
         { value: "bubbles", label: "Bobler", bg: "#d4c8a8", border: "#b8ac8a" },
     ];
-
-    async function handleImageSelect(e: Event) {
-        const input = e.target as HTMLInputElement;
-        const file = input.files?.[0];
-        if (!file) return;
-        if (file.size > 5 * 1024 * 1024) {
-            alert("Bildet er for stort (maks 5 MB)");
-            return;
-        }
-        if (!file.type.startsWith("image/")) {
-            alert("Kun bildefiler er tillatt");
-            return;
-        }
-
-        // Preview
-        imagePreview = URL.createObjectURL(file);
-
-        // Upload
-        uploading = true;
-        try {
-            dishImageUrl = await uploadDishImage(nightId, pairId, file);
-        } catch (err) {
-            console.error("Image upload failed:", err);
-            dishImageUrl = "";
-        } finally {
-            uploading = false;
-        }
-    }
-
-    function removeImage() {
-        dishImageUrl = "";
-        imagePreview = "";
-        if (fileInput) fileInput.value = "";
-    }
 
     async function handleSubmit() {
         if (!wineName.trim() || !dishName.trim()) return;
@@ -95,7 +55,6 @@
                 wineColor,
                 dishName: dishName.trim(),
                 dishDescription: dishDescription.trim() || undefined,
-                dishImageUrl: dishImageUrl || undefined,
                 registered: new Date().toISOString(),
             };
             await setRegistration(nightId, pairId, registration);
@@ -208,60 +167,12 @@
             rows={2}
             class="w-full py-2.5 px-4 border-[1.5px] border-cream-dark rounded-xl text-sm font-[inherit] bg-cream/60 focus:outline-none focus:border-wine-light focus:bg-white transition-all duration-300 resize-y"
         ></textarea>
-
-        <!-- Image upload -->
-        <div>
-            {#if imagePreview}
-                <div class="relative inline-block">
-                    <img
-                        src={imagePreview}
-                        alt="Forhåndsvisning"
-                        class="rounded-lg max-h-40 object-cover"
-                    />
-                    {#if uploading}
-                        <div class="absolute inset-0 bg-black/30 rounded-lg flex items-center justify-center">
-                            <span class="text-white text-sm font-medium">Laster opp...</span>
-                        </div>
-                    {/if}
-                    <button
-                        onclick={removeImage}
-                        class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/50 text-white border-none cursor-pointer flex items-center justify-center hover:bg-black/70 transition-colors duration-200"
-                        aria-label="Fjern bilde"
-                    >
-                        <svg class="w-3 h-3" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round"/>
-                        </svg>
-                    </button>
-                </div>
-            {:else}
-                <button
-                    onclick={() => fileInput?.click()}
-                    class="w-full py-6 px-4 rounded-xl border-[1.5px] border-dashed border-cream-dark bg-transparent text-text-light/60 cursor-pointer hover:border-wine-light hover:bg-wine/[0.02] hover:text-wine/50 transition-all duration-200 font-[inherit]"
-                >
-                    <div class="flex flex-col items-center gap-1.5">
-                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                            <rect x="3" y="3" width="18" height="18" rx="3"/>
-                            <circle cx="8.5" cy="8.5" r="1.5"/>
-                            <path d="M21 15l-5-5L5 21"/>
-                        </svg>
-                        <span class="text-[0.82rem]">Legg til bilde av retten</span>
-                    </div>
-                </button>
-                <input
-                    bind:this={fileInput}
-                    type="file"
-                    accept="image/*"
-                    onchange={handleImageSelect}
-                    class="hidden"
-                />
-            {/if}
-        </div>
     </div>
 
     <!-- Submit -->
     <button
         onclick={handleSubmit}
-        disabled={!wineName.trim() || !dishName.trim() || saving || uploading}
+        disabled={!wineName.trim() || !dishName.trim() || saving}
         class="w-full py-3.5 px-6 rounded-xl text-base font-semibold font-[inherit] cursor-pointer transition-all duration-300 bg-wine text-white border-none hover:bg-wine-dark hover:shadow-[0_4px_16px_rgba(92,26,42,0.25)] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
     >
         {saving ? "Lagrer..." : existingRegistration ? "Oppdater registrering" : "Registrer vin og rett"}

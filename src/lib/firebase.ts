@@ -8,12 +8,6 @@ import {
   remove,
   onValue,
 } from "firebase/database";
-import {
-  getStorage,
-  ref as storageRef,
-  uploadBytes,
-  getDownloadURL,
-} from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -27,7 +21,6 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const storage = getStorage(app);
 
 export type WineColor = "red" | "white" | "rosé" | "bubbles";
 export type NightType = "home" | "restaurant" | "grape";
@@ -59,7 +52,6 @@ export interface GrapeRegistration {
   wineColor?: WineColor;
   dishName: string;
   dishDescription?: string;
-  dishImageUrl?: string;
   registered: string;
 }
 
@@ -231,14 +223,4 @@ export async function setRegistration(
   await set(ref(db, `nights/${nightId}/registrations/${pairId}`), registration);
 }
 
-export async function uploadDishImage(
-  nightId: string,
-  pairId: string,
-  file: File
-): Promise<string> {
-  const path = `nights/${nightId}/dishes/${pairId}`;
-  const sRef = storageRef(storage, path);
-  await uploadBytes(sRef, file);
-  return getDownloadURL(sRef);
-}
 

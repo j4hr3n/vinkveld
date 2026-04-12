@@ -95,13 +95,6 @@
                     {#if registration.dishDescription}
                         <p class="text-text-light text-[0.82rem] mt-0.5 leading-relaxed">{registration.dishDescription}</p>
                     {/if}
-                    {#if registration.dishImageUrl}
-                        <img
-                            src={registration.dishImageUrl}
-                            alt={registration.dishName}
-                            class="mt-2 rounded-lg w-full max-h-48 object-cover"
-                        />
-                    {/if}
                 </div>
             </div>
         {:else if !canSeeRegistration && registration}
