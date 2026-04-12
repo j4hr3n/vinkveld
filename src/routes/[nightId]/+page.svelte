@@ -148,7 +148,11 @@
         updateNight(nightId!, { completed: !completed });
     }
 
+    let isAdmin = $state(false);
+
     onMount(() => {
+        isAdmin = new URLSearchParams(window.location.search).has("admin");
+
         const id = nightId;
         if (!id) return;
         const unsubscribe = subscribeToNight(id, (data) => {
@@ -543,7 +547,7 @@
         </div>
 
         {#if isGrape}
-            <GrapeNightView {night} nightId={nightId!} {currentUser} {isPastEvent} />
+            <GrapeNightView {night} nightId={nightId!} {currentUser} {isPastEvent} {isAdmin} />
         {:else}
             <!-- Participant avatars -->
             {#if !isRestaurant && participants.length > 0}

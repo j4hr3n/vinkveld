@@ -9,11 +9,13 @@
         nightId,
         currentUser,
         isPastEvent,
+        isAdmin = false,
     }: {
         night: WineNight;
         nightId: string;
         currentUser: string;
         isPastEvent: boolean;
+        isAdmin?: boolean;
     } = $props();
 
     let pairs = $derived(
@@ -56,8 +58,8 @@
     {:else}
         <!-- Registration / reveal phase -->
 
-        <!-- Toggle to re-open setup for editing -->
-        {#if !isRevealed}
+        <!-- Toggle to re-open setup for editing (admin only) -->
+        {#if !isRevealed && isAdmin}
             {#if showSetup}
                 <GrapeSetup {night} {nightId} />
                 <button
