@@ -538,7 +538,7 @@
                             {formatDate(night.date, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
                         </div>
                     </div>
-                    {#if !completed}
+                    {#if !completed && isAdmin}
                         <button
                             onclick={startEditHeader}
                             aria-label="Rediger tittel og dato"
