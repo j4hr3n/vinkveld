@@ -2,8 +2,18 @@
     import { onMount } from "svelte";
     import { goto } from "$app/navigation";
     import { base } from "$app/paths";
-    import { createNight, subscribeToNight, subscribeToAllNights, type WineNight, type NightType } from "$lib/firebase";
-    import { getHistory, removeFromHistory, type HistoryEntry } from "$lib/history";
+    import {
+        createNight,
+        subscribeToNight,
+        subscribeToAllNights,
+        type WineNight,
+        type NightType,
+    } from "$lib/firebase";
+    import {
+        getHistory,
+        removeFromHistory,
+        type HistoryEntry,
+    } from "$lib/history";
     import { formatDate } from "$lib/utils";
 
     let title = $state("");
@@ -35,8 +45,8 @@
                         adminError = error.message.includes("permission_denied")
                             ? "Mangler lesetilgang. Oppdater Firebase-reglene til å tillate lesing på /nights."
                             : `Feil ved lasting: ${error.message}`;
-                    }
-                )
+                    },
+                ),
             );
         }
 
@@ -48,8 +58,8 @@
                         removeFromHistory(entry.nightId);
                         history = getHistory();
                     }
-                })
-            )
+                }),
+            ),
         );
         return () => cleanups.forEach((u) => u());
     });
@@ -61,13 +71,13 @@
     let upcoming = $derived(
         history
             .filter((e) => e.date >= today)
-            .sort((a, b) => a.date.localeCompare(b.date))
+            .sort((a, b) => a.date.localeCompare(b.date)),
     );
 
     let past = $derived(
         history
             .filter((e) => e.date < today)
-            .sort((a, b) => b.date.localeCompare(a.date))
+            .sort((a, b) => b.date.localeCompare(a.date)),
     );
 
     async function handleCreate() {
@@ -77,7 +87,7 @@
         }
         creating = true;
         const id = await createNight(title.trim(), date, nightType);
-        goto(`${base}/${id}`);
+        goto(`${base}/${id}${nightType === "grape" ? "?admin" : ""}`);
     }
 
     function handleKeydown(e: KeyboardEvent) {
@@ -88,7 +98,6 @@
         removeFromHistory(nightId);
         history = getHistory();
     }
-
 </script>
 
 <svelte:head>
@@ -97,7 +106,9 @@
 
 <div class="text-center pt-12 animate-slide-down">
     <div class="text-6xl mb-5">🍷</div>
-    <h1 class="text-5xl max-[480px]:text-[2.4rem] text-wine mb-2 tracking-tight font-bold">
+    <h1
+        class="text-5xl max-[480px]:text-[2.4rem] text-wine mb-2 tracking-tight font-bold"
+    >
         Vinkveld
     </h1>
     <p class="font-accent italic text-text-light text-xl mb-14 tracking-wide">
@@ -143,45 +154,80 @@
     <div class="mb-7">
         <div
             class="block text-[0.82rem] font-medium text-text-light mb-2 uppercase tracking-wider"
-        >Sted</div>
+        >
+            Type
+        </div>
         <div class="grid grid-cols-3 gap-3">
             <button
                 type="button"
-                class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-[1.5px] cursor-pointer transition-all duration-300 font-[inherit] text-[0.9rem] font-medium {nightType === 'home'
+                class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-[1.5px] cursor-pointer transition-all duration-300 font-[inherit] text-[0.9rem] font-medium {nightType ===
+                'home'
                     ? 'border-wine bg-white shadow-[0_2px_8px_rgba(92,26,42,0.1)] text-wine'
                     : 'border-cream-dark bg-cream/40 text-text-light hover:border-wine-light hover:bg-white/60'}"
                 onclick={() => (nightType = "home")}
             >
-                <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M2 8l6-5 6 5M4 7v6h3v-3h2v3h3V7" stroke-linecap="round" stroke-linejoin="round"/>
+                <svg
+                    class="w-4 h-4"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                >
+                    <path
+                        d="M2 8l6-5 6 5M4 7v6h3v-3h2v3h3V7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
                 </svg>
                 Hjemme
             </button>
             <button
                 type="button"
-                class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-[1.5px] cursor-pointer transition-all duration-300 font-[inherit] text-[0.9rem] font-medium {nightType === 'restaurant'
+                class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-[1.5px] cursor-pointer transition-all duration-300 font-[inherit] text-[0.9rem] font-medium {nightType ===
+                'restaurant'
                     ? 'border-wine bg-white shadow-[0_2px_8px_rgba(92,26,42,0.1)] text-wine'
                     : 'border-cream-dark bg-cream/40 text-text-light hover:border-wine-light hover:bg-white/60'}"
                 onclick={() => (nightType = "restaurant")}
             >
-                <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M3 2v5c0 1.7 1.3 3 3 3h0c1.7 0 3-1.3 3-3V2M6 10v4M4 14h4M13 2v4c0 .6-.4 1-1 1h-1V2M11 7v7" stroke-linecap="round" stroke-linejoin="round"/>
+                <svg
+                    class="w-4 h-4"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                >
+                    <path
+                        d="M3 2v5c0 1.7 1.3 3 3 3h0c1.7 0 3-1.3 3-3V2M6 10v4M4 14h4M13 2v4c0 .6-.4 1-1 1h-1V2M11 7v7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
                 </svg>
                 Restaurant
             </button>
             <button
                 type="button"
-                class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-[1.5px] cursor-pointer transition-all duration-300 font-[inherit] text-[0.9rem] font-medium {nightType === 'grape'
+                class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-[1.5px] cursor-pointer transition-all duration-300 font-[inherit] text-[0.9rem] font-medium {nightType ===
+                'grape'
                     ? 'border-wine bg-white shadow-[0_2px_8px_rgba(92,26,42,0.1)] text-wine'
                     : 'border-cream-dark bg-cream/40 text-text-light hover:border-wine-light hover:bg-white/60'}"
                 onclick={() => (nightType = "grape")}
             >
-                <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <circle cx="8" cy="5" r="2"/>
-                    <circle cx="5.5" cy="8" r="2"/>
-                    <circle cx="10.5" cy="8" r="2"/>
-                    <circle cx="8" cy="11" r="2"/>
-                    <path d="M8 3V1M9 1.5l1.5-1" stroke-linecap="round" stroke-linejoin="round"/>
+                <svg
+                    class="w-4 h-4"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                >
+                    <circle cx="8" cy="5" r="2" />
+                    <circle cx="5.5" cy="8" r="2" />
+                    <circle cx="10.5" cy="8" r="2" />
+                    <circle cx="8" cy="11" r="2" />
+                    <path
+                        d="M8 3V1M9 1.5l1.5-1"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
                 </svg>
                 Drueaften
             </button>
@@ -196,21 +242,40 @@
     </button>
 </div>
 
-{#snippet historyGroup(entries: HistoryEntry[], label: string, offset: number, isUpcoming: boolean)}
+{#snippet historyGroup(
+    entries: HistoryEntry[],
+    label: string,
+    offset: number,
+    isUpcoming: boolean,
+)}
     {#if entries.length > 0}
         <div class="mt-10 animate-rise-in" style="animation-delay: {offset}s">
             <div class="flex items-center gap-3 mb-4">
                 {#if isUpcoming}
-                    <span class="inline-flex items-center gap-1.5 text-[0.82rem] font-medium text-wine-light uppercase tracking-wider">
-                        <svg class="w-3 h-3 opacity-70" viewBox="0 0 12 12" fill="currentColor">
-                            <circle cx="6" cy="6" r="3"/>
+                    <span
+                        class="inline-flex items-center gap-1.5 text-[0.82rem] font-medium text-wine-light uppercase tracking-wider"
+                    >
+                        <svg
+                            class="w-3 h-3 opacity-70"
+                            viewBox="0 0 12 12"
+                            fill="currentColor"
+                        >
+                            <circle cx="6" cy="6" r="3" />
                         </svg>
                         {label}
                     </span>
                 {:else}
-                    <h2 class="text-[0.82rem] font-medium text-text-light uppercase tracking-wider">{label}</h2>
+                    <h2
+                        class="text-[0.82rem] font-medium text-text-light uppercase tracking-wider"
+                    >
+                        {label}
+                    </h2>
                 {/if}
-                <div class="flex-1 h-px {isUpcoming ? 'bg-wine-light/30' : 'bg-cream-dark'}"></div>
+                <div
+                    class="flex-1 h-px {isUpcoming
+                        ? 'bg-wine-light/30'
+                        : 'bg-cream-dark'}"
+                ></div>
             </div>
 
             <div class="flex flex-col gap-2.5">
@@ -223,13 +288,17 @@
                             href="{base}/{entry.nightId}"
                             class="block backdrop-blur-sm rounded-xl p-4 pr-10 no-underline transition-all duration-200
                                 {isUpcoming
-                                    ? 'bg-wine/[0.04] border border-wine-light/30 shadow-[0_2px_12px_rgba(92,26,42,0.06)] hover:shadow-[0_4px_16px_rgba(92,26,42,0.14)] hover:border-wine-light/60 hover:bg-wine/[0.07]'
-                                    : 'bg-white/80 border border-cream-dark/60 shadow-[0_2px_12px_rgba(92,26,42,0.04)] hover:shadow-[0_4px_16px_rgba(92,26,42,0.1)] hover:border-wine-light/40'}"
+                                ? 'bg-wine/[0.04] border border-wine-light/30 shadow-[0_2px_12px_rgba(92,26,42,0.06)] hover:shadow-[0_4px_16px_rgba(92,26,42,0.14)] hover:border-wine-light/60 hover:bg-wine/[0.07]'
+                                : 'bg-white/80 border border-cream-dark/60 shadow-[0_2px_12px_rgba(92,26,42,0.04)] hover:shadow-[0_4px_16px_rgba(92,26,42,0.1)] hover:border-wine-light/40'}"
                         >
                             <div class="text-wine font-semibold text-base">
                                 {entry.title}
                             </div>
-                            <div class="font-accent italic text-sm mt-0.5 {isUpcoming ? 'text-wine-light/70' : 'text-text-light'}">
+                            <div
+                                class="font-accent italic text-sm mt-0.5 {isUpcoming
+                                    ? 'text-wine-light/70'
+                                    : 'text-text-light'}"
+                            >
                                 {formatDate(entry.date)}
                             </div>
                         </a>
@@ -238,8 +307,17 @@
                             aria-label="Fjern fra historikk"
                             class="absolute top-2.5 right-2.5 p-1.5 rounded-lg border-none bg-transparent text-text-light cursor-pointer opacity-0 group-hover/hist:opacity-100 max-[480px]:opacity-100 transition-all duration-200 hover:bg-wine/8 hover:text-wine"
                         >
-                            <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
-                                <path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round"/>
+                            <svg
+                                class="w-3.5 h-3.5"
+                                viewBox="0 0 16 16"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                            >
+                                <path
+                                    d="M4 4l8 8M12 4l-8 8"
+                                    stroke-linecap="round"
+                                />
                             </svg>
                         </button>
                     </div>
@@ -252,9 +330,21 @@
 {#if isAdmin}
     <div class="mt-10 animate-rise-in" style="animation-delay: 0.3s">
         <div class="flex items-center gap-3 mb-4">
-            <span class="inline-flex items-center gap-1.5 text-[0.82rem] font-medium text-wine uppercase tracking-wider">
-                <svg class="w-3.5 h-3.5 opacity-70" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M8 1.5l1.85 3.75L14 5.9l-3 2.92.7 4.1L8 11l-3.7 1.92.7-4.1-3-2.92 4.15-.65z" stroke-linecap="round" stroke-linejoin="round"/>
+            <span
+                class="inline-flex items-center gap-1.5 text-[0.82rem] font-medium text-wine uppercase tracking-wider"
+            >
+                <svg
+                    class="w-3.5 h-3.5 opacity-70"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                >
+                    <path
+                        d="M8 1.5l1.85 3.75L14 5.9l-3 2.92.7 4.1L8 11l-3.7 1.92.7-4.1-3-2.92 4.15-.65z"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
                 </svg>
                 Admin — Alle vinkvelder ({allNights.length})
             </span>
@@ -262,13 +352,19 @@
         </div>
 
         {#if adminError}
-            <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-800">
+            <div
+                class="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-800"
+            >
                 {adminError}
             </div>
         {:else if loadingAllNights}
-            <p class="text-text-light text-sm italic">Laster alle vinkvelder...</p>
+            <p class="text-text-light text-sm italic">
+                Laster alle vinkvelder...
+            </p>
         {:else if allNights.length === 0}
-            <p class="text-text-light text-sm italic">Ingen vinkvelder funnet.</p>
+            <p class="text-text-light text-sm italic">
+                Ingen vinkvelder funnet.
+            </p>
         {:else}
             <div class="flex flex-col gap-2.5">
                 {#each allNights as night, i}
@@ -280,25 +376,39 @@
                             href="{base}/{night.id}"
                             class="block bg-white/80 backdrop-blur-sm rounded-xl p-4 no-underline border border-cream-dark/60 shadow-[0_2px_12px_rgba(92,26,42,0.04)] transition-all duration-200 hover:shadow-[0_4px_16px_rgba(92,26,42,0.1)] hover:border-wine-light/40"
                         >
-                            <div class="flex items-center justify-between gap-3">
+                            <div
+                                class="flex items-center justify-between gap-3"
+                            >
                                 <div>
-                                    <div class="text-wine font-semibold text-base">
+                                    <div
+                                        class="text-wine font-semibold text-base"
+                                    >
                                         {night.title}
                                     </div>
-                                    <div class="font-accent italic text-sm mt-0.5 text-text-light">
+                                    <div
+                                        class="font-accent italic text-sm mt-0.5 text-text-light"
+                                    >
                                         {formatDate(night.date)}
                                     </div>
                                 </div>
-                                <div class="text-right text-xs text-text-light shrink-0">
+                                <div
+                                    class="text-right text-xs text-text-light shrink-0"
+                                >
                                     {#if night.wines}
-                                        <span>{Object.keys(night.wines).length} viner</span>
+                                        <span
+                                            >{Object.keys(night.wines).length} viner</span
+                                        >
                                     {:else}
                                         <span class="opacity-50">0 viner</span>
                                     {/if}
                                     {#if night.type === "restaurant"}
-                                        <div class="mt-0.5 opacity-60">🍽 Restaurant</div>
+                                        <div class="mt-0.5 opacity-60">
+                                            🍽 Restaurant
+                                        </div>
                                     {:else if night.type === "grape"}
-                                        <div class="mt-0.5 opacity-60">🍇 Drueaften</div>
+                                        <div class="mt-0.5 opacity-60">
+                                            🍇 Drueaften
+                                        </div>
                                     {/if}
                                 </div>
                             </div>
@@ -310,5 +420,10 @@
     </div>
 {:else}
     {@render historyGroup(upcoming, "Kommende vinkvelder", 0.3, true)}
-    {@render historyGroup(past, "Tidligere vinkvelder", upcoming.length > 0 ? 0.3 + upcoming.length * 0.05 + 0.1 : 0.3, false)}
+    {@render historyGroup(
+        past,
+        "Tidligere vinkvelder",
+        upcoming.length > 0 ? 0.3 + upcoming.length * 0.05 + 0.1 : 0.3,
+        false,
+    )}
 {/if}
