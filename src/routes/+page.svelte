@@ -409,29 +409,37 @@
                                             class={wineCount === 0
                                                 ? "opacity-50"
                                                 : ""}
-                                            >{wineCount} viner</span
+                                            >{wineCount}
+                                            {wineCount === 1
+                                                ? "vin"
+                                                : "viner"}</span
                                         >
                                         <div
                                             class={participantCount === 0
                                                 ? "opacity-50"
                                                 : ""}
                                         >
-                                            {participantCount} deltakere
+                                            {participantCount}
+                                            {participantCount === 1
+                                                ? "deltaker"
+                                                : "deltakere"}
                                         </div>
                                         <div class="mt-0.5 opacity-60">
                                             🍇 Drueaften
                                         </div>
                                     {:else}
-                                        {#if night.wines}
-                                            <span
-                                                >{Object.keys(night.wines)
-                                                    .length} viner</span
-                                            >
-                                        {:else}
-                                            <span class="opacity-50"
-                                                >0 viner</span
-                                            >
-                                        {/if}
+                                        {@const wineCount = night.wines
+                                            ? Object.keys(night.wines).length
+                                            : 0}
+                                        <span
+                                            class={wineCount === 0
+                                                ? "opacity-50"
+                                                : ""}
+                                            >{wineCount}
+                                            {wineCount === 1
+                                                ? "vin"
+                                                : "viner"}</span
+                                        >
                                         {#if night.type === "restaurant"}
                                             <div class="mt-0.5 opacity-60">
                                                 🍽 Restaurant
