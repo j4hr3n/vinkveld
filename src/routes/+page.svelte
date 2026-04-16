@@ -157,7 +157,7 @@
         >
             Type
         </div>
-        <div class="grid grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 min-[481px]:grid-cols-3 gap-3">
             <button
                 type="button"
                 class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-[1.5px] cursor-pointer transition-all duration-300 font-[inherit] text-[0.9rem] font-medium {nightType ===
