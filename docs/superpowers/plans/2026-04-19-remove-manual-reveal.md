@@ -4,7 +4,7 @@
 
 **Goal:** Remove the manual admin reveal toggle from grape nights; reveal is governed solely by the scheduled `revealTime` + `date`.
 
-**Architecture:** Three focused edits in order: (1) strip the manual-override UI and add the "missing revealTime" hint in `GrapeSetup.svelte`; (2) collapse the three-state `isRevealed` to a single schedule-driven derived in `GrapeNightView.svelte` and gate `isSetupComplete` on `revealTime`; (3) drop `revealed` from the `WineNight` type and `updateNight` keys. Each task leaves the build green. No automated tests exist — verification is `bun run check` plus a manual browser walkthrough at the end.
+**Architecture:** Three focused edits in order: (1) strip the manual-override UI and add the "missing revealTime" hint in `GrapeSetup.svelte`; (2) collapse the three-state `isRevealed` to a single schedule-driven derived in `GrapeNightView.svelte` and gate `isSetupComplete` on `revealTime`; (3) drop `revealed` from the `WineNight` type and `updateNight` keys. Each task leaves the component it edits clean; a transient `svelte-check` error referencing `night.revealed` will exist between Tasks 1 and 3 (noted per-task) and disappears at Task 3. No automated tests exist — verification is `bun run check` plus a manual browser walkthrough at the end.
 
 **Tech Stack:** SvelteKit 2, Svelte 5 runes, TypeScript, Firebase Realtime DB, Tailwind 4, Bun.
 
@@ -27,7 +27,9 @@ No new files. No existing tests to update.
 ## Task 1: Simplify `GrapeSetup.svelte`
 
 **Files:**
-- Modify: `src/lib/components/GrapeSetup.svelte` (lines 19, 65, 554–562, 565–609)
+- Modify: `src/lib/components/GrapeSetup.svelte` (lines 19, 65, 543–563, 565–609)
+
+All line numbers in this task refer to the **pre-edit** state of the file. After each edit, downstream line numbers shift; re-use the "before" snippets (not line numbers) to locate subsequent edits.
 
 **What this task accomplishes:** removes every reference to manual reveal from the setup component, hardens the time input against empty writes, and adds the visual hint when an admin has assignments but hasn't set a reveal time. After this task, `GrapeSetup.svelte` no longer reads or writes `night.revealed`.
 
@@ -35,15 +37,29 @@ No new files. No existing tests to update.
 
 Read `src/lib/components/GrapeSetup.svelte` lines 1–70 and 530–615 to confirm the current state matches the spec's cited line numbers.
 
-- [ ] **Step 2: Remove the `isRevealed` derived (line 19)**
+- [ ] **Step 2: Remove the `isRevealed` derived (line 19) and its trailing blank line (line 20)**
 
-Delete this entire line:
+Current context (lines 17–22):
 
 ```ts
+let { night, nightId, isAdmin = false }: { night: WineNight; nightId: string; isAdmin?: boolean } = $props();
+
 let isRevealed = $derived(night.revealed === true);
+
+let newName = $state("");
+let addingName = $state(false);
 ```
 
-There should be a blank line remaining between `let { night, nightId, isAdmin = false }: ... = $props();` and `let newName = $state("");`.
+Delete both line 19 (`let isRevealed = ...`) and line 20 (the blank line following it) so the result is:
+
+```ts
+let { night, nightId, isAdmin = false }: { night: WineNight; nightId: string; isAdmin?: boolean } = $props();
+
+let newName = $state("");
+let addingName = $state(false);
+```
+
+Exactly one blank line between `$props()` and `newName`.
 
 - [ ] **Step 3: Remove the `confirmReveal` state variable**
 
@@ -80,19 +96,19 @@ The behavior change: empty values (from clearing the field) are ignored. Non-emp
 
 - [ ] **Step 5: Add the "missing revealTime" visual hint to the reveal-time row**
 
-The row opens at line 543:
+The row opens at line 543 with this exact markup:
 
 ```svelte
 <div class="flex items-center gap-3 py-3 px-4 rounded-xl border-[1.5px] border-cream-dark bg-white/60">
 ```
 
-Make its border class conditional on whether assignments exist without a reveal time. Replace the fixed `border-cream-dark` with a Svelte conditional:
+Make only the border *color* class conditional on whether assignments exist without a reveal time. `border-[1.5px]` stays as a static class; only `border-cream-dark` becomes conditional. Replace the line with:
 
 ```svelte
 <div class="flex items-center gap-3 py-3 px-4 rounded-xl border-[1.5px] {hasAssignments && !night.revealTime ? 'border-wine-light' : 'border-cream-dark'} bg-white/60">
 ```
 
-Then update the subtitle on line 550–552. Current:
+Then update the subtitle `<div>` on lines 550–552 in the same row. Current:
 
 ```svelte
 <div class="text-[0.75rem] text-text-light mt-0.5">
@@ -132,7 +148,13 @@ Expected: no errors in `GrapeSetup.svelte`. Errors in `GrapeNightView.svelte` re
 
 If check surfaces a **new** error inside `GrapeSetup.svelte`, fix it before proceeding.
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 9: Grep sanity check for `confirmReveal` leftovers**
+
+Run Grep on `src/` for pattern `confirmReveal`.
+
+Expected: 0 matches. If any remain, find and remove them in `GrapeSetup.svelte` before committing.
+
+- [ ] **Step 10: Commit**
 
 ```bash
 git add src/lib/components/GrapeSetup.svelte
@@ -145,6 +167,8 @@ git commit -m "refactor: strip manual reveal UI from GrapeSetup"
 
 **Files:**
 - Modify: `src/lib/components/GrapeNightView.svelte` (lines 40–51, 68, 90–152)
+
+All line numbers below refer to the **pre-edit** state of the file; use the "before" snippets to anchor edits as earlier edits shift downstream line numbers.
 
 **What this task accomplishes:** collapses the three-state reveal logic into a single derived driven by the schedule, removes the admin reveal-toggle button, and requires `revealTime` for setup to be complete. After this task, `GrapeNightView.svelte` no longer reads or writes `night.revealed`.
 
@@ -230,7 +254,13 @@ Expected: no errors in `GrapeNightView.svelte`. The type error in `firebase.ts` 
 
 Specifically, there should be **zero** new `GrapeNightView.svelte` errors. If `svelte-check` reports any, fix before proceeding.
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 7: Grep sanity check for `scheduledReveal` leftovers**
+
+Run Grep on `src/` for pattern `scheduledReveal`.
+
+Expected: 0 matches. If any remain, remove them before committing.
+
+- [ ] **Step 8: Commit**
 
 ```bash
 git add src/lib/components/GrapeNightView.svelte
@@ -286,7 +316,7 @@ Run three Grep searches against `src/`:
 
 1. Pattern: `confirmReveal` — expected: 0 matches.
 2. Pattern: `scheduledReveal` — expected: 0 matches.
-3. Pattern: `revealed` — expected: only the match at `src/lib/components/WineCard.svelte:187` (a comment about rating reveal) and matches inside `isRevealed` identifiers in `GrapeNightView.svelte`, `GrapePairCard.svelte`, and `GrapeInfoCard.svelte`. Zero references to the string `night.revealed` or to `revealed:` as an object key.
+3. Pattern: `\brevealed\b` (word-boundary regex — matches the literal word `revealed` but *not* `isRevealed`) — expected: only the match at `src/lib/components/WineCard.svelte:187` (a comment `<!-- Completed: all scores revealed + average -->`). Zero other matches; zero references to `night.revealed` or `revealed:` as an object key.
 
 If any unexpected match appears, clean it up in the owning file, re-run check, then proceed.
 
