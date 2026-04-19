@@ -376,6 +376,16 @@ export const GRAPES: Grape[] = [
     regions: ["Loire", "Nantais"],
   },
   {
+    id: "hondarrabi-zuri",
+    name: "Hondarrabi Zuri",
+    color: "white",
+    description:
+      "Baskisk hvitvinsdrue og hoveddrue i Txakoli. Gir friske, lett musserende viner med høy syre og lav alkohol, sterkt preget av Atlanterhavet.",
+    flavorProfile: ["Sitron", "Grønt eple", "Saltlake", "Blomst", "Urter"],
+    foodPairings: ["Pintxos", "Sjømat", "Blekksprut", "Anchoas"],
+    regions: ["Txakoli de Getaria", "Txakoli de Bizkaia", "Txakoli de Álava"],
+  },
+  {
     id: "assyrtiko",
     name: "Assyrtiko",
     color: "white",
