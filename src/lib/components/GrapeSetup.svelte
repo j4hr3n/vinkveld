@@ -132,6 +132,22 @@
         await removePair(nightId, pairId);
     }
 
+    async function handleAddLeftoverToPair(pairId: string) {
+        const leftover = unpairedParticipants[0];
+        if (!leftover) return;
+        const existing = night.pairs ?? {};
+        const target = existing[pairId];
+        if (!target) return;
+        const updated: Record<string, GrapePair> = {
+            ...existing,
+            [pairId]: {
+                ...target,
+                memberNames: [...target.memberNames, leftover.name],
+            },
+        };
+        await setPairs(nightId, updated);
+    }
+
     function toggleGrapeSelection(grapeId: string) {
         const current = [...selectedGrapes];
         const idx = current.indexOf(grapeId);
@@ -232,6 +248,22 @@
     <!-- Step 2: Pairs -->
     {#if participants.length >= 2}
         <section class="animate-rise-in">
+            {#snippet pairMembers(memberNames: string[])}
+                {#each memberNames as name, ni}
+                    <div class="flex items-center gap-1.5">
+                        <div
+                            class="w-5 h-5 rounded-full flex items-center justify-center text-[0.45rem] font-bold tracking-wide text-white/90"
+                            style="background: {getAvatarColor(name)}"
+                        >
+                            {getInitials(name)}
+                        </div>
+                        <span class="text-sm text-text">{name}</span>
+                    </div>
+                    {#if ni < memberNames.length - 1}
+                        <span class="text-text-light/40 text-xs">&</span>
+                    {/if}
+                {/each}
+            {/snippet}
             <div class="flex items-center gap-3 mb-4">
                 <h3 class="text-[0.82rem] font-medium text-text-light uppercase tracking-wider">
                     Par ({pairCount})
@@ -273,20 +305,7 @@
                             class="flex items-center gap-2 py-2.5 px-4 rounded-xl bg-white/60 border border-cream-dark/50 animate-rise-in group/pair"
                             style="animation-delay: {i * 0.04}s"
                         >
-                            {#each pair.memberNames as name, ni}
-                                <div class="flex items-center gap-1.5">
-                                    <div
-                                        class="w-5 h-5 rounded-full flex items-center justify-center text-[0.45rem] font-bold tracking-wide text-white/90"
-                                        style="background: {getAvatarColor(name)}"
-                                    >
-                                        {getInitials(name)}
-                                    </div>
-                                    <span class="text-sm text-text">{name}</span>
-                                </div>
-                                {#if ni < pair.memberNames.length - 1}
-                                    <span class="text-text-light/40 text-xs">&</span>
-                                {/if}
-                            {/each}
+                            {@render pairMembers(pair.memberNames)}
                             {#if assignments[pair.id]}
                                 <span class="ml-auto text-[0.75rem] text-wine/70 font-medium">
                                     {getGrapeById(assignments[pair.id])?.name ?? assignments[pair.id]}
@@ -357,6 +376,23 @@
                         </div>
                     </div>
                 {/if}
+            {:else if isAdmin && unpairedParticipants.length === 1 && pairs.length > 0}
+                <div class="p-4 rounded-xl border border-wine-light/30 bg-wine/[0.02]">
+                    <p class="text-[0.75rem] text-text-light mb-3">
+                        <span class="font-semibold text-text">{unpairedParticipants[0].name}</span> er alene — legg til i et eksisterende par:
+                    </p>
+                    <div class="flex flex-col gap-2">
+                        {#each pairs as pair}
+                            <button
+                                onclick={() => handleAddLeftoverToPair(pair.id)}
+                                class="flex items-center gap-2 py-2 px-3 rounded-lg border-[1.5px] border-cream-dark bg-white/60 hover:border-wine-light hover:bg-wine/5 cursor-pointer transition-all duration-200 text-left font-[inherit]"
+                            >
+                                {@render pairMembers(pair.memberNames)}
+                                <span class="ml-auto text-wine/50 text-lg leading-none">+</span>
+                            </button>
+                        {/each}
+                    </div>
+                </div>
             {:else if !isAdmin && pairs.length === 0}
                 <p class="text-text-light text-sm italic">Arrangøren oppretter par.</p>
             {/if}
