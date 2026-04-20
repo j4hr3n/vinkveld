@@ -77,6 +77,8 @@
     let myPair = $derived(
         myPairId ? pairs.find((p) => p.id === myPairId) : undefined,
     );
+
+    let showGallery = $derived(isRevealed || isAdmin);
 </script>
 
 <div class="space-y-6">
@@ -264,8 +266,10 @@
                                 Hemmelig til kvelden
                             </p>
                             <p>
-                                Hvilken vin og rett hvert par velger holdes
-                                skjult fra de andre frem til avsløringen.
+                                Hvem som er i par med hvem, hvilke druer som er
+                                delt ut, og hva hvert par har valgt holdes
+                                skjult frem til avsløringen. Du ser kun din egen
+                                registrering.
                             </p>
                         </div>
                     </div>
@@ -329,29 +333,32 @@
         {/if}
 
         <!-- All pairs gallery -->
-        <div>
-            <div class="flex items-center gap-3 mb-4 animate-fade-in">
-                <h3
-                    class="text-[0.82rem] font-medium text-text-light uppercase tracking-wider"
-                >
-                    {isRevealed ? "Kveldens par" : "Par og druer"}
-                </h3>
-                <div class="flex-1 h-px bg-cream-dark"></div>
-            </div>
+        {#if showGallery}
+            <div>
+                <div class="flex items-center gap-3 mb-4 animate-fade-in">
+                    <h3
+                        class="text-[0.82rem] font-medium text-text-light uppercase tracking-wider"
+                    >
+                        {isRevealed ? "Kveldens par" : "Par og druer"}
+                    </h3>
+                    <div class="flex-1 h-px bg-cream-dark"></div>
+                </div>
 
-            <div class="flex flex-col gap-4">
-                {#each pairs as pair, i (pair.id)}
-                    <GrapePairCard
-                        pairId={pair.id}
-                        {pair}
-                        grapeId={assignments[pair.id]}
-                        registration={registrations[pair.id]}
-                        isOwnPair={pair.id === myPairId}
-                        {isRevealed}
-                        index={i}
-                    />
-                {/each}
+                <div class="flex flex-col gap-4">
+                    {#each pairs as pair, i (pair.id)}
+                        <GrapePairCard
+                            pairId={pair.id}
+                            {pair}
+                            grapeId={assignments[pair.id]}
+                            registration={registrations[pair.id]}
+                            isOwnPair={pair.id === myPairId}
+                            {isRevealed}
+                            {isAdmin}
+                            index={i}
+                        />
+                    {/each}
+                </div>
             </div>
-        </div>
+        {/if}
     {/if}
 </div>

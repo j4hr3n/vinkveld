@@ -11,6 +11,7 @@
         registration,
         isOwnPair = false,
         isRevealed = false,
+        isAdmin = false,
         index = 0,
     }: {
         pairId: string;
@@ -19,11 +20,12 @@
         registration?: GrapeRegistration;
         isOwnPair?: boolean;
         isRevealed?: boolean;
+        isAdmin?: boolean;
         index?: number;
     } = $props();
 
     let grape = $derived(grapeId ? getGrapeById(grapeId) : undefined);
-    let canSeeRegistration = $derived(isOwnPair || isRevealed);
+    let canSeeRegistration = $derived(isOwnPair || isRevealed || isAdmin);
 </script>
 
 <div
