@@ -167,7 +167,7 @@
                         <p
                             class="text-[0.85rem] text-text-light leading-relaxed"
                         >
-                            Dere er delt inn i par, og hvert par har fått
+                            Dere er delt inn i lag, og hvert lag har fått
                             tildelt en drue. Oppgaven er å velge en vin med den
                             druen og en rett som passer til.
                         </p>
@@ -233,10 +233,10 @@
                             class="text-[0.82rem] text-text-light leading-relaxed"
                         >
                             <p class="font-medium text-text mb-0.5">
-                                Par og druer
+                                Lag og druer
                             </p>
                             <p>
-                                Alle deltakere deles inn i par. Hvert par
+                                Alle deltakere deles inn i lag. Hvert lag
                                 tildeles en druetype og skal finne en vin laget
                                 med den druen, pluss en rett som passer til.
                             </p>
@@ -266,8 +266,8 @@
                                 Hemmelig til kvelden
                             </p>
                             <p>
-                                Hvem som er i par med hvem, hvilke druer som er
-                                delt ut, og hva hvert par har valgt holdes
+                                Hvem som er på lag med hvem, hvilke druer som er
+                                delt ut, og hva hvert lag har valgt holdes
                                 skjult frem til avsløringen. Du ser kun din egen
                                 registrering.
                             </p>
@@ -328,7 +328,7 @@
         <!-- Spectator message: has name but not in a pair -->
         {#if currentUser && !myPairId && !isRevealed}
             <div class="py-3 px-4 rounded-xl bg-cream/40 border border-cream-dark/40 text-sm text-text-light italic animate-fade-in">
-                Du er ikke med i et par. Kontakt arrangøren hvis du skal delta.
+                Du er ikke med på et lag. Kontakt arrangøren hvis du skal delta.
             </div>
         {/if}
 
@@ -339,7 +339,7 @@
                     <h3
                         class="text-[0.82rem] font-medium text-text-light uppercase tracking-wider"
                     >
-                        {isRevealed ? "Kveldens par" : "Par og druer"}
+                        {isRevealed ? "Kveldens lag" : "Lag og druer"}
                     </h3>
                     <div class="flex-1 h-px bg-cream-dark"></div>
                 </div>

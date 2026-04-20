@@ -97,7 +97,7 @@
                     <rect x="3" y="7" width="10" height="7" rx="2"/>
                     <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke-linecap="round"/>
                 </svg>
-                <span class="text-text-light text-sm italic">Paret har registrert vin og rett</span>
+                <span class="text-text-light text-sm italic">Laget har registrert vin og rett</span>
             </div>
         {:else}
             <!-- No registration yet -->

@@ -266,13 +266,13 @@
             {/snippet}
             <div class="flex items-center gap-3 mb-4">
                 <h3 class="text-[0.82rem] font-medium text-text-light uppercase tracking-wider">
-                    Par ({pairCount})
+                    Lag ({pairCount})
                 </h3>
                 <div class="flex-1 h-px bg-cream-dark"></div>
                 {#if isAdmin && pairs.length > 0}
                     {#if confirmClearPairs}
                         <div class="flex items-center gap-2">
-                            <span class="text-[0.72rem] text-wine">Fjerne alle par?</span>
+                            <span class="text-[0.72rem] text-wine">Fjerne alle lag?</span>
                             <button
                                 onclick={handleClearPairs}
                                 class="text-[0.72rem] text-white bg-wine px-2 py-0.5 rounded font-[inherit] border-none cursor-pointer hover:bg-wine-dark transition-colors duration-200"
@@ -315,7 +315,7 @@
                                 <button
                                     onclick={() => handleRemovePair(pair.id)}
                                     class="ml-auto p-1 rounded-lg border-none bg-transparent text-text-light/30 cursor-pointer opacity-0 group-hover/pair:opacity-100 max-[480px]:opacity-100 transition-all duration-200 hover:text-wine hover:bg-wine/5"
-                                    aria-label="Fjern par"
+                                    aria-label="Fjern lag"
                                 >
                                     <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8">
                                         <path d="M4 4l8 8M12 4l-8 8" stroke-linecap="round"/>
@@ -334,12 +334,12 @@
                         onclick={startPairing}
                         class="w-full py-2.5 px-4 rounded-xl border-[1.5px] border-dashed border-wine-light/50 bg-transparent text-wine/70 text-sm font-medium font-[inherit] cursor-pointer hover:bg-wine/5 hover:border-wine-light transition-all duration-200"
                     >
-                        + Lag par
+                        + Nytt lag
                     </button>
                 {:else}
                     <div class="p-4 rounded-xl border border-wine-light/30 bg-wine/[0.02]">
                         <p class="text-[0.75rem] text-text-light mb-3">
-                            Velg {pairingQueue.length === 0 ? '2' : unpairedParticipants.length - pairingQueue.length <= 1 ? 'resten' : 'en til'} for å lage et par:
+                            Velg {pairingQueue.length === 0 ? '2' : unpairedParticipants.length - pairingQueue.length <= 1 ? 'resten' : 'en til'} for å lage et lag:
                         </p>
                         <div class="flex flex-wrap gap-2 mb-3">
                             {#each unpairedParticipants as p}
@@ -365,7 +365,7 @@
                                 disabled={pairingQueue.length < 2}
                                 class="px-4 py-2 rounded-lg text-sm font-semibold font-[inherit] cursor-pointer bg-wine text-white border-none hover:bg-wine-dark transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
                             >
-                                Bekreft par
+                                Bekreft lag
                             </button>
                             <button
                                 onclick={() => { pairingMode = false; pairingQueue = []; }}
@@ -379,7 +379,7 @@
             {:else if isAdmin && unpairedParticipants.length === 1 && pairs.length > 0}
                 <div class="p-4 rounded-xl border border-wine-light/30 bg-wine/[0.02]">
                     <p class="text-[0.75rem] text-text-light mb-3">
-                        <span class="font-semibold text-text">{unpairedParticipants[0].name}</span> er alene — legg til i et eksisterende par:
+                        <span class="font-semibold text-text">{unpairedParticipants[0].name}</span> er alene — legg til i et eksisterende lag:
                     </p>
                     <div class="flex flex-col gap-2">
                         {#each pairs as pair}
@@ -394,7 +394,7 @@
                     </div>
                 </div>
             {:else if !isAdmin && pairs.length === 0}
-                <p class="text-text-light text-sm italic">Arrangøren oppretter par.</p>
+                <p class="text-text-light text-sm italic">Arrangøren oppretter lag.</p>
             {/if}
         </section>
     {/if}
@@ -620,7 +620,7 @@
             </svg>
             <div class="text-[0.82rem] text-text-light leading-relaxed">
                 <p class="font-medium text-text mb-1">Slik fungerer drueaften</p>
-                <p>Hvert par tildeles en drue og velger en vin med den druen, samt en rett som passer til. Valgene holdes hemmelig for de andre parene frem til kvelden.</p>
+                <p>Hvert lag tildeles en drue og velger en vin med den druen, samt en rett som passer til. Valgene holdes hemmelig for de andre lagene frem til kvelden.</p>
             </div>
         </div>
     </section>
