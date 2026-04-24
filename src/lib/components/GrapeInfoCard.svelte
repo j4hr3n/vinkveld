@@ -3,7 +3,11 @@
 
     let { grape, expanded = false }: { grape: Grape; expanded?: boolean } = $props();
 
-    let open = $state(expanded);
+    let open = $state(false);
+
+    $effect(() => {
+        open = expanded;
+    });
 </script>
 
 <div class="rounded-xl border border-cream-dark/60 bg-white/80 overflow-hidden transition-all duration-300">

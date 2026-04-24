@@ -29,18 +29,32 @@
     let grape = $derived(getGrapeById(grapeId));
 
     // Wine fields
-    let wineName = $state(existingRegistration?.wineName ?? "");
-    let wineLink = $state(existingRegistration?.wineLink ?? "");
-    let wineColor = $state<WineColor>(existingRegistration?.wineColor ?? "red");
+    let wineName = $state("");
+    let wineLink = $state("");
+    let wineColor = $state<WineColor>("red");
 
     // Dish fields
-    let dishName = $state(existingRegistration?.dishName ?? "");
-    let dishDescription = $state(existingRegistration?.dishDescription ?? "");
+    let dishName = $state("");
+    let dishDescription = $state("");
 
     let saving = $state(false);
     let saved = $state(false);
     let error = $state("");
     let searchOpen = $state(false);
+    let currentRegistration = $state<GrapeRegistration | undefined>();
+
+    $effect(() => {
+        if (existingRegistration === currentRegistration) return;
+
+        wineName = existingRegistration?.wineName ?? "";
+        wineLink = existingRegistration?.wineLink ?? "";
+        wineColor = existingRegistration?.wineColor ?? "red";
+        dishName = existingRegistration?.dishName ?? "";
+        dishDescription = existingRegistration?.dishDescription ?? "";
+        saved = false;
+        error = "";
+        currentRegistration = existingRegistration;
+    });
 
     const colors: { value: WineColor; label: string; bg: string; border?: string }[] = [
         { value: "red", label: "Rød", bg: "#5c1a2a" },
