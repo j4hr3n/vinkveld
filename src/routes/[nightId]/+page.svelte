@@ -22,6 +22,7 @@
     import { colorOrder } from "$lib/colors";
     import { getInitials, getAvatarColor, formatDate } from "$lib/utils";
     import { getUserName, setUserName } from "$lib/identity";
+    import { isAdminEnabled, onAdminChange } from "$lib/admin";
 
     let nightId = $derived(page.params.nightId);
     let night = $state<WineNight | null | undefined>(undefined);
@@ -143,15 +144,22 @@
     let isAdmin = $state(false);
 
     onMount(() => {
-        isAdmin = new URLSearchParams(window.location.search).has("admin");
+        isAdmin = isAdminEnabled();
 
         const id = nightId;
         if (!id) return;
         const unsubscribe = subscribeToNight(id, (data) => {
             night = data;
         });
+        const unsubscribeAdmin = onAdminChange((active) => {
+            isAdmin = active;
+            if (!active) editingHeader = false;
+        });
 
-        return unsubscribe;
+        return () => {
+            unsubscribe();
+            unsubscribeAdmin();
+        };
     });
 
     $effect(() => {
@@ -174,7 +182,11 @@
     let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
     function copyLink() {
-        navigator.clipboard.writeText(window.location.href);
+        const url = new URL(window.location.href);
+        url.searchParams.delete("admin");
+        url.searchParams.delete("adminCode");
+        url.searchParams.delete("adminToken");
+        navigator.clipboard.writeText(url.toString());
         toastVisible = true;
         clearTimeout(toastTimer);
         toastTimer = setTimeout(() => {

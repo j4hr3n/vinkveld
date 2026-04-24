@@ -15,6 +15,7 @@
         type HistoryEntry,
     } from "$lib/history";
     import { formatDate } from "$lib/utils";
+    import { isAdminEnabled, onAdminChange } from "$lib/admin";
 
     let title = $state("");
     let date = $state(new Date().toISOString().split("T")[0]);
@@ -25,30 +26,50 @@
     let allNights = $state<WineNight[]>([]);
     let loadingAllNights = $state(false);
     let adminError = $state("");
+    let adminUnsubscribe: (() => void) | undefined;
+
+    function subscribeToAdminNights() {
+        if (adminUnsubscribe) return;
+        loadingAllNights = true;
+        adminError = "";
+        adminUnsubscribe = subscribeToAllNights(
+            (nights) => {
+                allNights = nights;
+                loadingAllNights = false;
+            },
+            (error) => {
+                loadingAllNights = false;
+                adminError = error.message.includes("permission_denied")
+                    ? "Mangler lesetilgang. Oppdater Firebase-reglene til å tillate lesing på /nights."
+                    : `Feil ved lasting: ${error.message}`;
+            },
+        );
+    }
+
+    function stopAdminNights() {
+        adminUnsubscribe?.();
+        adminUnsubscribe = undefined;
+        allNights = [];
+        loadingAllNights = false;
+        adminError = "";
+    }
+
+    function handleAdminChange(active: boolean) {
+        isAdmin = active;
+        if (active) {
+            subscribeToAdminNights();
+        } else {
+            stopAdminNights();
+        }
+    }
 
     onMount(() => {
-        const params = new URLSearchParams(window.location.search);
-        isAdmin = params.has("admin");
+        isAdmin = isAdminEnabled();
 
         const cleanups: (() => void)[] = [];
+        cleanups.push(onAdminChange(handleAdminChange));
 
-        if (isAdmin) {
-            loadingAllNights = true;
-            cleanups.push(
-                subscribeToAllNights(
-                    (nights) => {
-                        allNights = nights;
-                        loadingAllNights = false;
-                    },
-                    (error) => {
-                        loadingAllNights = false;
-                        adminError = error.message.includes("permission_denied")
-                            ? "Mangler lesetilgang. Oppdater Firebase-reglene til å tillate lesing på /nights."
-                            : `Feil ved lasting: ${error.message}`;
-                    },
-                ),
-            );
-        }
+        if (isAdmin) subscribeToAdminNights();
 
         const entries = getHistory();
         entries.forEach((entry) =>
@@ -61,7 +82,10 @@
                 }),
             ),
         );
-        return () => cleanups.forEach((u) => u());
+        return () => {
+            stopAdminNights();
+            cleanups.forEach((u) => u());
+        };
     });
 
     let titleInput = $state<HTMLInputElement | null>(null);
@@ -87,7 +111,7 @@
         }
         creating = true;
         const id = await createNight(title.trim(), date, nightType);
-        goto(`${base}/${id}${nightType === "grape" ? "?admin" : ""}`);
+        goto(`${base}/${id}`);
     }
 
     function handleKeydown(e: KeyboardEvent) {
