@@ -215,8 +215,8 @@
         if (completed) return;
         if (!editingWineId) return;
         const wineId = editingWineId;
-        editingWineId = null;
         await updateWine(nightId!, wineId, data);
+        editingWineId = null;
     }
 
     function handleDelete(wineId: string) {
@@ -251,7 +251,14 @@
         if (!t) return;
         savingHeader = true;
         try {
-            await updateNight(nightId!, { title: t, date: editDate, type: editType });
+            await updateNight(nightId!, {
+                title: t,
+                date: editDate,
+                type: editType,
+                ...(editType === "grape" && !night?.grapeDataVersion
+                    ? { grapeDataVersion: 2, grapeSetupComplete: false }
+                    : {}),
+            });
             editingHeader = false;
         } finally {
             savingHeader = false;

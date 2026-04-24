@@ -29,62 +29,66 @@ const MAX_SUGGESTIONS = 8;
 const MAX_VINTAGES_PER_HIT = 5;
 
 export async function searchWines(query: string): Promise<WineSuggestion[]> {
-	const queryYear = extractYear(query);
-	const nameQuery = queryYear != null ? query.replace(/\b(19|20)\d{2}\b/, "").trim() : query;
-	const isYearOnly = queryYear != null && nameQuery === "";
+	try {
+		const queryYear = extractYear(query);
+		const nameQuery = queryYear != null ? query.replace(/\b(19|20)\d{2}\b/, "").trim() : query;
+		const isYearOnly = queryYear != null && nameQuery === "";
 
-	const res = await fetch(ENDPOINT, {
-		method: "POST",
-		headers: {
-			"X-Algolia-Application-Id": ALGOLIA_APP_ID,
-			"X-Algolia-API-Key": ALGOLIA_SEARCH_KEY,
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify({
-			query: isYearOnly ? "" : nameQuery,
-			hitsPerPage: isYearOnly ? 20 : 4,
-		}),
-	});
+		const res = await fetch(ENDPOINT, {
+			method: "POST",
+			headers: {
+				"X-Algolia-Application-Id": ALGOLIA_APP_ID,
+				"X-Algolia-API-Key": ALGOLIA_SEARCH_KEY,
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				query: isYearOnly ? "" : nameQuery,
+				hitsPerPage: isYearOnly ? 20 : 4,
+			}),
+		});
 
-	if (!res.ok) return [];
+		if (!res.ok) return [];
 
-	const data = await res.json();
-	const suggestions: WineSuggestion[] = [];
+		const data = await res.json();
+		const suggestions: WineSuggestion[] = [];
 
-	for (const hit of data.hits as AlgoliaHit[]) {
-		const vintages = getNotableVintages(hit.vintages, queryYear);
-		const base = {
-			name: hit.name,
-			winery: hit.winery?.name,
-			region: hit.region?.name,
-			typeId: hit.type_id,
-		};
+		for (const hit of data.hits as AlgoliaHit[]) {
+			const vintages = getNotableVintages(hit.vintages, queryYear);
+			const base = {
+				name: hit.name,
+				winery: hit.winery?.name,
+				region: hit.region?.name,
+				typeId: hit.type_id,
+			};
 
-		if (queryYear != null) {
-			// Year in query: only show that specific vintage
-			const match = vintages.find((v) => v.year === queryYear);
-			if (match) {
-				suggestions.push({ ...base, vintage: match.year, rating: match.rating });
-			}
-		} else if (vintages.length === 0) {
-			suggestions.push({
-				...base,
-				rating: hit.statistics?.ratings_average,
-			});
-		} else {
-			for (const v of vintages) {
+			if (queryYear != null) {
+				// Year in query: only show that specific vintage
+				const match = vintages.find((v) => v.year === queryYear);
+				if (match) {
+					suggestions.push({ ...base, vintage: match.year, rating: match.rating });
+				}
+			} else if (vintages.length === 0) {
 				suggestions.push({
 					...base,
-					vintage: v.year,
-					rating: v.rating,
+					rating: hit.statistics?.ratings_average,
 				});
+			} else {
+				for (const v of vintages) {
+					suggestions.push({
+						...base,
+						vintage: v.year,
+						rating: v.rating,
+					});
+				}
 			}
+
+			if (suggestions.length >= MAX_SUGGESTIONS) break;
 		}
 
-		if (suggestions.length >= MAX_SUGGESTIONS) break;
+		return suggestions.slice(0, MAX_SUGGESTIONS);
+	} catch {
+		return [];
 	}
-
-	return suggestions.slice(0, MAX_SUGGESTIONS);
 }
 
 function extractYear(query: string): number | undefined {

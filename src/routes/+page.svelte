@@ -20,6 +20,7 @@
     let title = $state("");
     let date = $state(new Date().toISOString().split("T")[0]);
     let creating = $state(false);
+    let createError = $state("");
     let nightType = $state<NightType>("home");
     let history = $state(getHistory());
     let isAdmin = $state(false);
@@ -105,13 +106,24 @@
     );
 
     async function handleCreate() {
+        if (creating) return;
+        createError = "";
         if (!title.trim()) {
             titleInput?.focus();
             return;
         }
         creating = true;
-        const id = await createNight(title.trim(), date, nightType);
-        goto(`${base}/${id}`);
+        let createdId: string | undefined;
+        try {
+            createdId = await createNight(title.trim(), date, nightType);
+            await goto(`${base}/${createdId}`);
+        } catch {
+            createError = createdId
+                ? "Vinkvelden ble opprettet, men kunne ikke åpnes automatisk. Prøv igjen fra historikken."
+                : "Kunne ikke opprette vinkvelden. Prøv igjen.";
+        } finally {
+            creating = false;
+        }
     }
 
     function handleKeydown(e: KeyboardEvent) {
@@ -257,6 +269,14 @@
             </button>
         </div>
     </div>
+    {#if createError}
+        <div
+            role="alert"
+            class="mb-5 py-2.5 px-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm animate-fade-in"
+        >
+            {createError}
+        </div>
+    {/if}
     <button
         class="w-full py-3.5 px-6 border-none rounded-xl text-base font-semibold font-[inherit] cursor-pointer transition-all duration-300 bg-wine text-white hover:bg-wine-dark hover:shadow-[0_4px_16px_rgba(92,26,42,0.25)] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
         onclick={handleCreate}

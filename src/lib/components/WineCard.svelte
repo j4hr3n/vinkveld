@@ -1,8 +1,12 @@
 <script lang="ts">
   import { untrack } from "svelte";
-  import type { Wine } from "$lib/firebase";
+  import {
+    getWineRatingEntries,
+    getWineRatingForPerson,
+    type Wine,
+  } from "$lib/firebase";
   import { stripeColors, colorLabels, bgTints } from "$lib/colors";
-  import { getInitials, getAvatarColor } from "$lib/utils";
+  import { getInitials, getAvatarColor, normalizeSafeUrl } from "$lib/utils";
 
   let {
     wine,
@@ -30,16 +34,20 @@
 
   let confirmingDelete = $state(false);
   let initials = $derived(getInitials(wine.person ?? ""));
+  let safeWineLink = $derived(normalizeSafeUrl(wine.link));
 
   // Rating input — initialise from persisted value
   let ratingInput = $state<string>(
-    untrack(() => wine.ratings?.[currentUser] != null ? String(wine.ratings[currentUser]) : '')
+    untrack(() => {
+      const persisted = getWineRatingForPerson(wine.ratings, currentUser);
+      return persisted ? String(persisted.score) : '';
+    })
   );
 
   // Keep in sync when Firebase pushes an update for this user's score
   $effect(() => {
-    const persisted = wine.ratings?.[currentUser];
-    ratingInput = persisted != null ? String(persisted) : '';
+    const persisted = getWineRatingForPerson(wine.ratings, currentUser);
+    ratingInput = persisted ? String(persisted.score) : '';
   });
 
   function submitRating() {
@@ -56,11 +64,11 @@
     }
   }
 
-  let ratingEntries = $derived(wine.ratings ? Object.entries(wine.ratings) : []);
+  let ratingEntries = $derived(getWineRatingEntries(wine.ratings));
 
   let avgRating = $derived.by(() => {
     if (!ratingEntries.length) return null;
-    const sum = ratingEntries.reduce((acc, [, score]) => acc + score, 0);
+    const sum = ratingEntries.reduce((acc, rating) => acc + rating.score, 0);
     return Math.round(sum / ratingEntries.length);
   });
 
@@ -95,9 +103,9 @@
 
     <div class="flex-1 min-w-0">
       <div class="font-semibold text-[0.95rem] leading-snug">
-        {#if wine.link}
+        {#if safeWineLink}
           <a
-            href={wine.link}
+            href={safeWineLink}
             target="_blank"
             rel="noopener"
             class="text-text no-underline hover:text-wine transition-colors duration-200 inline-flex items-center gap-1.5"
@@ -186,10 +194,10 @@
       {:else if completed && ratingEntries.length > 0}
         <!-- Completed: all scores revealed + average -->
         <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          {#each ratingEntries as [person, score]}
+          {#each ratingEntries as rating}
             <span class="inline-flex items-baseline gap-1 text-[0.82rem]">
-              <span class="font-semibold" style="color: {getAvatarColor(person)}">{person}</span>
-              <span class="text-text-light font-medium">{score}</span>
+              <span class="font-semibold" style="color: {getAvatarColor(rating.name)}">{rating.name}</span>
+              <span class="text-text-light font-medium">{rating.score}</span>
             </span>
           {/each}
           {#if ratingEntries.length > 1}

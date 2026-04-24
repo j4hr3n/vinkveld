@@ -16,6 +16,18 @@ export function getInitials(name: string): string {
 		.slice(0, 2);
 }
 
+export function normalizeSafeUrl(value: string | null | undefined): string {
+	const trimmed = value?.trim() ?? "";
+	if (!trimmed) return "";
+
+	try {
+		const url = new URL(trimmed);
+		return url.protocol === "http:" || url.protocol === "https:" ? url.href : "";
+	} catch {
+		return "";
+	}
+}
+
 export function formatDate(dateStr: string, options?: Intl.DateTimeFormatOptions): string {
 	const d = new Date(dateStr + "T00:00:00");
 	return d.toLocaleDateString("nb-NO", options ?? { day: "numeric", month: "long", year: "numeric" });

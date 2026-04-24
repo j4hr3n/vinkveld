@@ -1,6 +1,13 @@
 <script lang="ts">
+    import { page } from "$app/state";
     import { onMount } from "svelte";
-    import { updateNight, type WineNight } from "$lib/firebase";
+    import {
+        setGrapeReveal,
+        subscribeToGrapePairAccess,
+        subscribeToGrapePrivateData,
+        type GrapePrivateData,
+        type WineNight,
+    } from "$lib/firebase";
     import GrapeSetup from "./GrapeSetup.svelte";
     import GrapePairCard from "./GrapePairCard.svelte";
     import GrapeRegistrationForm from "./GrapeRegistrationForm.svelte";
@@ -17,15 +24,10 @@
         isAdmin?: boolean;
     } = $props();
 
-    let pairs = $derived(
-        night.pairs
-            ? Object.entries(night.pairs).map(([id, p]) => ({ id, ...p }))
-            : [],
-    );
-
-    let assignments = $derived(night.grapeAssignments ?? {});
-    let hasAssignments = $derived(Object.keys(assignments).length > 0);
-    let registrations = $derived(night.registrations ?? {});
+    let usePrivateGrapeData = $derived(night.grapeDataVersion === 2);
+    let grapePairToken = $derived(page.url.searchParams.get("pair") ?? "");
+    let privateGrapeData = $state<GrapePrivateData>({});
+    let privateGrapeError = $state("");
 
     // Ticking clock for scheduled reveal
     let now = $state(new Date());
@@ -50,10 +52,92 @@
         night.revealed === true || (night.revealed !== false && scheduledReveal)
     );
 
+    $effect(() => {
+        if (usePrivateGrapeData && isAdmin && night.revealed == null && scheduledReveal) {
+            void setGrapeReveal(nightId, true, true);
+        }
+    });
+
+    $effect(() => {
+        privateGrapeData = {};
+        privateGrapeError = "";
+
+        if (!usePrivateGrapeData) return;
+
+        const hasPublishedGrapeData = Object.keys(night.pairs ?? {}).length > 0;
+
+        if (isAdmin || (isRevealed && !hasPublishedGrapeData)) {
+            return subscribeToGrapePrivateData(
+                nightId,
+                (data) => {
+                    privateGrapeData = data;
+                },
+                (error) => {
+                    privateGrapeError = error.message;
+                },
+            );
+        }
+
+        if (grapePairToken) {
+            return subscribeToGrapePairAccess(
+                nightId,
+                grapePairToken,
+                (data) => {
+                    privateGrapeData = data;
+                },
+                (error) => {
+                    privateGrapeError = error.message;
+                },
+            );
+        }
+    });
+
+    let effectivePairsRecord = $derived(
+        usePrivateGrapeData
+            ? (privateGrapeData.pairs ?? night.pairs ?? {})
+            : (night.pairs ?? {}),
+    );
+    let effectiveAssignments = $derived(
+        usePrivateGrapeData
+            ? (privateGrapeData.grapeAssignments ?? night.grapeAssignments ?? {})
+            : (night.grapeAssignments ?? {}),
+    );
+    let effectiveRegistrations = $derived(
+        usePrivateGrapeData
+            ? (privateGrapeData.registrations ?? night.registrations ?? {})
+            : (night.registrations ?? {}),
+    );
+    let effectiveGrapes = $derived(
+        usePrivateGrapeData
+            ? (privateGrapeData.grapes ?? night.grapes ?? [])
+            : (night.grapes ?? []),
+    );
+    let effectiveNight = $derived({
+        ...night,
+        grapes: effectiveGrapes,
+        pairs: effectivePairsRecord,
+        grapeAssignments: effectiveAssignments,
+        registrations: effectiveRegistrations,
+        pairTokens: privateGrapeData.pairTokens ?? night.pairTokens,
+    });
+
+    let pairs = $derived(
+        Object.entries(effectivePairsRecord).map(([id, p]) => ({ id, ...p })),
+    );
+
+    let assignments = $derived(effectiveAssignments);
+    let hasAssignments = $derived(Object.keys(assignments).length > 0);
+    let registrations = $derived(effectiveRegistrations);
+
     let myPairId = $derived.by(() => {
-        if (!currentUser || !night.pairs) return null;
+        if (usePrivateGrapeData && grapePairToken) {
+            const tokenPairIds = Object.keys(privateGrapeData.pairs ?? {});
+            if (tokenPairIds.length === 1) return tokenPairIds[0];
+        }
+
+        if (!currentUser) return null;
         const normalized = currentUser.trim().toLowerCase();
-        for (const [pairId, pair] of Object.entries(night.pairs)) {
+        for (const [pairId, pair] of Object.entries(effectivePairsRecord)) {
             if (
                 pair.memberNames.some(
                     (n) => n.trim().toLowerCase() === normalized,
@@ -65,7 +149,11 @@
         return null;
     });
 
-    let isSetupComplete = $derived(pairs.length > 0 && hasAssignments);
+    let isSetupComplete = $derived(
+        usePrivateGrapeData
+            ? (night.grapeSetupComplete === true || (pairs.length > 0 && hasAssignments))
+            : (pairs.length > 0 && hasAssignments),
+    );
     let showSetup = $state(false);
     let showRegistrationForm = $state(false);
     let showHelp = $state(false);
@@ -84,7 +172,7 @@
 <div class="space-y-6">
     <!-- Setup phase: always show setup when not fully configured -->
     {#if !isSetupComplete}
-        <GrapeSetup {night} {nightId} {isAdmin} />
+        <GrapeSetup night={effectiveNight} {nightId} {isAdmin} />
     {:else}
         <!-- Registration / reveal phase -->
 
@@ -94,7 +182,7 @@
                 <!-- Reveal toggle -->
                 <button
                     onclick={() =>
-                        updateNight(nightId, { revealed: !isRevealed })}
+                        setGrapeReveal(nightId, !isRevealed, usePrivateGrapeData)}
                     class="flex items-center gap-2 py-2 px-4 rounded-xl border-[1.5px] cursor-pointer transition-all duration-200 font-[inherit] text-[0.82rem] font-medium {isRevealed
                         ? 'border-sage bg-sage/10 text-sage'
                         : 'border-cream-dark bg-white/60 text-text-light hover:border-wine-light hover:text-wine'}"
@@ -149,8 +237,14 @@
             </div>
 
             {#if showSetup}
-                <GrapeSetup {night} {nightId} {isAdmin} />
+                <GrapeSetup night={effectiveNight} {nightId} {isAdmin} />
             {/if}
+        {/if}
+
+        {#if privateGrapeError}
+            <div class="py-3 px-4 rounded-xl bg-red-50 border border-red-200 text-sm text-red-800 animate-fade-in">
+                Kunne ikke laste skjult druedata: {privateGrapeError}
+            </div>
         {/if}
 
         <!-- Welcome message for users who haven't set their name -->
@@ -310,6 +404,7 @@
                             grapeId={myGrapeId}
                             existingRegistration={myRegistration}
                             pairNames={myPair?.memberNames ?? []}
+                            usePrivateData={usePrivateGrapeData}
                             onSaved={() => (showRegistrationForm = false)}
                         />
                     {/key}
@@ -351,6 +446,7 @@
                             {pair}
                             grapeId={assignments[pair.id]}
                             registration={registrations[pair.id]}
+                            pairToken={effectiveNight.pairTokens?.[pair.id]}
                             isOwnPair={pair.id === myPairId}
                             {isRevealed}
                             {isAdmin}

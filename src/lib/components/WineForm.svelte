@@ -5,6 +5,7 @@
     import { stripeColors } from "$lib/colors";
     import WineSearchModal from "./WineSearchModal.svelte";
     import { vivinoTypeToColor, type WineSuggestion } from "$lib/vivinoSearch";
+    import { normalizeSafeUrl } from "$lib/utils";
 
     const COLORS: readonly {
         id: string;
@@ -45,6 +46,7 @@
     let link = $state(untrack(() => editing?.link ?? ""));
     let notes = $state(untrack(() => editing?.notes ?? ""));
     let submitting = $state(false);
+    let submitError = $state("");
     let searchOpen = $state(false);
 
     let nameInput = $state<HTMLInputElement | null>(null);
@@ -66,6 +68,8 @@
     });
 
     async function handleSubmit() {
+        if (submitting) return;
+        submitError = "";
         if (!name.trim()) {
             nameInput?.focus();
             return;
@@ -75,20 +79,27 @@
             return;
         }
         submitting = true;
-        if (!hidePersonField) setUserName(person);
-        await onSubmit({
-            name: name.trim(),
-            person: hidePersonField ? "" : person.trim(),
-            color: selectedColor,
-            link: link.trim(),
-            notes: notes.trim(),
-        });
-        if (!editing) {
-            name = "";
-            link = "";
-            notes = "";
+        try {
+            if (!hidePersonField) setUserName(person);
+            await onSubmit({
+                name: name.trim(),
+                person: hidePersonField ? "" : person.trim(),
+                color: selectedColor,
+                link: normalizeSafeUrl(link),
+                notes: notes.trim(),
+            });
+            if (!editing) {
+                name = "";
+                link = "";
+                notes = "";
+            }
+        } catch {
+            submitError = editing
+                ? "Kunne ikke lagre endringene. Prøv igjen."
+                : "Kunne ikke legge til vinen. Prøv igjen.";
+        } finally {
+            submitting = false;
         }
-        submitting = false;
     }
 
     function handleWineSelect(s: WineSuggestion) {
@@ -228,6 +239,14 @@
     </div>
 
     {#if editing}
+        {#if submitError}
+            <div
+                role="alert"
+                class="mb-4 py-2.5 px-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm animate-fade-in"
+            >
+                {submitError}
+            </div>
+        {/if}
         <div class="flex gap-3">
             <button
                 class="flex-1 py-3.5 px-6 border-none rounded-xl text-base font-semibold font-[inherit] cursor-pointer transition-all duration-300 bg-wine text-white hover:bg-wine-dark hover:shadow-[0_4px_16px_rgba(92,26,42,0.25)] active:scale-[0.98] disabled:opacity-60"
@@ -244,6 +263,14 @@
             </button>
         </div>
     {:else}
+        {#if submitError}
+            <div
+                role="alert"
+                class="mb-4 py-2.5 px-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm animate-fade-in"
+            >
+                {submitError}
+            </div>
+        {/if}
         <button
             class="w-full py-3.5 px-6 border-none rounded-xl text-base font-semibold font-[inherit] cursor-pointer transition-all duration-300 bg-wine text-white hover:bg-wine-dark hover:shadow-[0_4px_16px_rgba(92,26,42,0.25)] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
             onclick={handleSubmit}

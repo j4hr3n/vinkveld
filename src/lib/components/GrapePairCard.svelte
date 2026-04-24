@@ -1,6 +1,6 @@
 <script lang="ts">
     import { getGrapeById } from "$lib/grapes";
-    import { getInitials, getAvatarColor } from "$lib/utils";
+    import { getInitials, getAvatarColor, normalizeSafeUrl } from "$lib/utils";
     import GrapeInfoCard from "./GrapeInfoCard.svelte";
     import type { GrapePair, GrapeRegistration } from "$lib/firebase";
 
@@ -9,6 +9,7 @@
         pair,
         grapeId,
         registration,
+        pairToken,
         isOwnPair = false,
         isRevealed = false,
         isAdmin = false,
@@ -18,6 +19,7 @@
         pair: GrapePair;
         grapeId?: string;
         registration?: GrapeRegistration;
+        pairToken?: string;
         isOwnPair?: boolean;
         isRevealed?: boolean;
         isAdmin?: boolean;
@@ -26,6 +28,24 @@
 
     let grape = $derived(grapeId ? getGrapeById(grapeId) : undefined);
     let canSeeRegistration = $derived(isOwnPair || isRevealed || isAdmin);
+    let safeWineLink = $derived(normalizeSafeUrl(registration?.wineLink));
+    let copiedPairLink = $state(false);
+    let copyTimer: ReturnType<typeof setTimeout> | undefined;
+
+    function copyPairLink() {
+        if (!pairToken) return;
+        const url = new URL(window.location.href);
+        url.searchParams.delete("admin");
+        url.searchParams.delete("adminCode");
+        url.searchParams.delete("adminToken");
+        url.searchParams.set("pair", pairToken);
+        navigator.clipboard.writeText(url.toString());
+        copiedPairLink = true;
+        clearTimeout(copyTimer);
+        copyTimer = setTimeout(() => {
+            copiedPairLink = false;
+        }, 1500);
+    }
 </script>
 
 <div
@@ -49,6 +69,15 @@
                     <span class="text-text-light/40 text-xs">&</span>
                 {/if}
             {/each}
+            {#if isAdmin && pairToken}
+                <button
+                    type="button"
+                    onclick={copyPairLink}
+                    class="ml-auto py-1 px-2.5 rounded-lg border border-cream-dark/60 bg-cream/40 text-[0.7rem] font-medium font-[inherit] text-text-light cursor-pointer hover:border-wine-light hover:text-wine transition-all duration-200"
+                >
+                    {copiedPairLink ? "Kopiert" : "Kopier laglenke"}
+                </button>
+            {/if}
         </div>
     </div>
 
@@ -71,8 +100,8 @@
                     ></div>
                     <div>
                         <div class="text-[0.72rem] font-medium text-text-light uppercase tracking-wider mb-0.5">Vin</div>
-                        {#if registration.wineLink}
-                            <a href={registration.wineLink} target="_blank" rel="noopener noreferrer" class="text-wine font-medium text-sm hover:underline">
+                        {#if safeWineLink}
+                            <a href={safeWineLink} target="_blank" rel="noopener noreferrer" class="text-wine font-medium text-sm hover:underline">
                                 {registration.wineName}
                             </a>
                         {:else}

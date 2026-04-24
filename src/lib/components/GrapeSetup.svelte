@@ -2,12 +2,15 @@
     import {
         addParticipant,
         removeParticipant,
-        setPairs,
+        addPair,
+        addMemberToPair,
         clearPairs,
         removePair,
-        setNightGrapes,
-        setGrapeAssignments,
+        setNightGrapeSelected,
+        clearGrapeAssignments,
+        updateGrapeAssignments,
         updateNight,
+        setGrapeReveal,
         type WineNight,
         type GrapePair,
     } from "$lib/firebase";
@@ -17,6 +20,7 @@
     let { night, nightId, isAdmin = false }: { night: WineNight; nightId: string; isAdmin?: boolean } = $props();
 
     let isRevealed = $derived(night.revealed === true);
+    let usePrivateGrapeData = $derived(night.grapeDataVersion === 2);
 
     let newName = $state("");
     let addingName = $state(false);
@@ -115,51 +119,39 @@
             memberNames: [...pairingQueue],
             created: new Date().toISOString(),
         };
-        const existingPairs = night.pairs ?? {};
-        const pairId = `pair_${Date.now()}`;
-        await setPairs(nightId, { ...existingPairs, [pairId]: newPair });
+        await addPair(nightId, newPair, usePrivateGrapeData);
         pairingQueue = [];
     }
 
     async function handleClearPairs() {
-        await clearPairs(nightId);
+        await clearPairs(nightId, usePrivateGrapeData);
         pairingMode = false;
         pairingQueue = [];
         confirmClearPairs = false;
     }
 
     async function handleRemovePair(pairId: string) {
-        await removePair(nightId, pairId);
+        await removePair(nightId, pairId, usePrivateGrapeData);
     }
 
     async function handleAddLeftoverToPair(pairId: string) {
         const leftover = unpairedParticipants[0];
         if (!leftover) return;
-        const existing = night.pairs ?? {};
-        const target = existing[pairId];
-        if (!target) return;
-        const updated: Record<string, GrapePair> = {
-            ...existing,
-            [pairId]: {
-                ...target,
-                memberNames: [...target.memberNames, leftover.name],
-            },
-        };
-        await setPairs(nightId, updated);
+        await addMemberToPair(nightId, pairId, leftover.name, usePrivateGrapeData);
     }
 
-    function toggleGrapeSelection(grapeId: string) {
-        const current = [...selectedGrapes];
-        const idx = current.indexOf(grapeId);
-        if (idx >= 0) {
-            current.splice(idx, 1);
-        } else {
-            current.push(grapeId);
-        }
-        setNightGrapes(nightId, current);
+    async function toggleGrapeSelection(grapeId: string) {
+        const shouldSelect = !selectedGrapes.includes(grapeId);
+        const current = await setNightGrapeSelected(
+            nightId,
+            grapeId,
+            shouldSelect,
+            pairCount,
+            usePrivateGrapeData
+        );
         // Clear stale assignments if grape count no longer matches pair count
-        if (hasAssignments && current.length !== pairCount) {
-            setGrapeAssignments(nightId, {});
+        if (current.length !== pairCount) {
+            await clearGrapeAssignments(nightId, usePrivateGrapeData);
         }
     }
 
@@ -174,7 +166,12 @@
         pairs.forEach((pair, i) => {
             newAssignments[pair.id] = shuffled[i];
         });
-        await setGrapeAssignments(nightId, newAssignments);
+        await updateGrapeAssignments(
+            nightId,
+            newAssignments,
+            Object.keys(assignments),
+            usePrivateGrapeData
+        );
         confirmReshuffle = false;
     }
 
@@ -565,7 +562,7 @@
                 <!-- Manual override -->
                 {#if isRevealed}
                     <button
-                        onclick={() => updateNight(nightId, { revealed: false })}
+                        onclick={() => setGrapeReveal(nightId, false, usePrivateGrapeData)}
                         class="w-full flex items-center gap-3 py-3 px-4 rounded-xl border-[1.5px] cursor-pointer transition-all duration-200 font-[inherit] text-left border-sage bg-sage/5 hover:bg-sage/10"
                     >
                         <svg class="w-5 h-5 text-sage shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -581,7 +578,7 @@
                     <div class="w-full flex items-center gap-3 py-3 px-4 rounded-xl border-[1.5px] border-wine/30 bg-wine/[0.03]">
                         <span class="text-sm text-text flex-1">Avsløre vin og rett for alle?</span>
                         <button
-                            onclick={() => { updateNight(nightId, { revealed: true }); confirmReveal = false; }}
+                            onclick={() => { setGrapeReveal(nightId, true, usePrivateGrapeData); confirmReveal = false; }}
                             class="px-3 py-1.5 rounded-lg text-[0.78rem] font-semibold font-[inherit] cursor-pointer bg-wine text-white border-none hover:bg-wine-dark transition-all duration-200"
                         >
                             Bekreft

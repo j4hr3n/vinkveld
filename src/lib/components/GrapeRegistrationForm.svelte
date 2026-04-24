@@ -9,6 +9,7 @@
     import WineSearchModal from "./WineSearchModal.svelte";
     import type { WineSuggestion } from "$lib/vivinoSearch";
     import { TYPE_MAP } from "$lib/vivinoSearch";
+    import { normalizeSafeUrl } from "$lib/utils";
 
     let {
         nightId,
@@ -16,6 +17,7 @@
         grapeId,
         existingRegistration,
         pairNames,
+        usePrivateData = false,
         onSaved,
     }: {
         nightId: string;
@@ -23,6 +25,7 @@
         grapeId: string;
         existingRegistration?: GrapeRegistration;
         pairNames: string[];
+        usePrivateData?: boolean;
         onSaved?: () => void;
     } = $props();
 
@@ -74,9 +77,10 @@
                 dishName: dishName.trim(),
                 registered: new Date().toISOString(),
             };
-            if (wineLink.trim()) registration.wineLink = wineLink.trim();
+            const safeWineLink = normalizeSafeUrl(wineLink);
+            if (safeWineLink) registration.wineLink = safeWineLink;
             if (dishDescription.trim()) registration.dishDescription = dishDescription.trim();
-            await setRegistration(nightId, pairId, registration);
+            await setRegistration(nightId, pairId, registration, usePrivateData);
             saved = true;
             setTimeout(() => onSaved?.(), 1200);
         } catch (e) {

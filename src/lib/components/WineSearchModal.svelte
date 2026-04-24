@@ -28,10 +28,12 @@
 	let activeIndex = $state(-1);
 	let searchInput = $state<HTMLInputElement | null>(null);
 	let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+	let searchRequestId = 0;
 
 	function handleInput() {
 		clearTimeout(debounceTimer);
 		activeIndex = -1;
+		const requestId = ++searchRequestId;
 
 		if (query.trim().length < 2) {
 			suggestions = [];
@@ -43,10 +45,19 @@
 		loading = true;
 		debounceTimer = setTimeout(async () => {
 			const q = query.trim();
-			const results = await searchWines(q);
-			suggestions = results;
-			loading = false;
-			searched = true;
+			try {
+				const results = await searchWines(q);
+				if (requestId !== searchRequestId || !open || q !== query.trim()) return;
+				suggestions = results;
+			} catch {
+				if (requestId !== searchRequestId || !open || q !== query.trim()) return;
+				suggestions = [];
+			} finally {
+				if (requestId === searchRequestId && open && q === query.trim()) {
+					loading = false;
+					searched = true;
+				}
+			}
 		}, 250);
 	}
 
@@ -62,6 +73,7 @@
 		searched = false;
 		activeIndex = -1;
 		loading = false;
+		searchRequestId += 1;
 		clearTimeout(debounceTimer);
 	}
 

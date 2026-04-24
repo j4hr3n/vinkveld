@@ -1,14 +1,14 @@
 <script lang="ts">
-    import type { Wine } from "$lib/firebase";
+    import { getWineRatingEntries, type Wine } from "$lib/firebase";
 
     let { wines }: { wines: (Wine & { id: string })[] } = $props();
 
     let ranked = $derived.by(() => {
         return wines
             .map((w) => {
-                const entries = w.ratings ? Object.values(w.ratings) : [];
+                const entries = getWineRatingEntries(w.ratings);
                 const avg = entries.length
-                    ? Math.round(entries.reduce((a, b) => a + b, 0) / entries.length)
+                    ? Math.round(entries.reduce((sum, rating) => sum + rating.score, 0) / entries.length)
                     : null;
                 return { ...w, avg, ratingCount: entries.length };
             })
