@@ -80,6 +80,7 @@ export interface WineNight {
   grapeAssignments?: Record<string, string>;
   registrations?: Record<string, GrapeRegistration>;
   pairTokens?: Record<string, string>;
+  grapeServingOrder?: Record<string, number>;
 }
 
 export interface GrapePrivateData {
@@ -409,6 +410,13 @@ export async function setWineRating(
     name,
     score,
   });
+}
+
+export async function setGrapeServingOrder(
+  nightId: string,
+  order: Record<string, number> | null
+): Promise<void> {
+  await update(ref(db, `nights/${nightId}`), { grapeServingOrder: order });
 }
 
 // --- Grape night functions ---

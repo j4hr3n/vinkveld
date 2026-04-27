@@ -1,5 +1,6 @@
 <script lang="ts">
     import { page } from "$app/state";
+    import { base } from "$app/paths";
     import { onMount } from "svelte";
     import {
         setGrapeReveal,
@@ -11,6 +12,7 @@
     import GrapeSetup from "./GrapeSetup.svelte";
     import GrapePairCard from "./GrapePairCard.svelte";
     import GrapeRegistrationForm from "./GrapeRegistrationForm.svelte";
+    import GrapeServingOrderEditor from "./GrapeServingOrderEditor.svelte";
 
     let {
         night,
@@ -217,6 +219,27 @@
                         Skjult for andre
                     {/if}
                 </button>
+
+                <!-- Program link (admin always) -->
+                <a
+                    href="{base}/{nightId}/program"
+                    class="flex items-center gap-2 py-2 px-4 rounded-xl border-[1.5px] border-cream-dark bg-white/60 text-text-light cursor-pointer transition-all duration-200 no-underline font-[inherit] text-[0.82rem] font-medium hover:border-wine-light hover:text-wine"
+                >
+                    <svg
+                        class="w-4 h-4"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                    >
+                        <path
+                            d="M3 2.5h7.5l2.5 2.5V13a.5.5 0 0 1-.5.5H3a.5.5 0 0 1-.5-.5V3a.5.5 0 0 1 .5-.5z"
+                            stroke-linejoin="round"
+                        />
+                        <path d="M5.5 6.5h5M5.5 9h5M5.5 11h3" stroke-linecap="round" />
+                    </svg>
+                    Vis program
+                </a>
 
                 <!-- Edit setup toggle -->
                 {#if showSetup}
@@ -455,6 +478,41 @@
                     {/each}
                 </div>
             </div>
+
+            <!-- Admin-only: serving order editor -->
+            {#if isAdmin && pairs.length > 0}
+                <GrapeServingOrderEditor
+                    {nightId}
+                    {pairs}
+                    {assignments}
+                    servingOrder={night.grapeServingOrder}
+                />
+            {/if}
+
+            <!-- Public program link (non-admin, post-reveal) -->
+            {#if !isAdmin && isRevealed && pairs.length > 0}
+                <div class="flex justify-center animate-fade-in" style="animation-delay:0.1s">
+                    <a
+                        href="{base}/{nightId}/program"
+                        class="inline-flex items-center gap-2 py-2 px-4 rounded-xl border-[1.5px] border-cream-dark bg-white/60 text-text-light no-underline font-[inherit] text-[0.82rem] font-medium hover:border-wine-light hover:text-wine transition-all duration-200"
+                    >
+                        <svg
+                            class="w-4 h-4"
+                            viewBox="0 0 16 16"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                        >
+                            <path
+                                d="M3 2.5h7.5l2.5 2.5V13a.5.5 0 0 1-.5.5H3a.5.5 0 0 1-.5-.5V3a.5.5 0 0 1 .5-.5z"
+                                stroke-linejoin="round"
+                            />
+                            <path d="M5.5 6.5h5M5.5 9h5M5.5 11h3" stroke-linecap="round" />
+                        </svg>
+                        Vis program
+                    </a>
+                </div>
+            {/if}
         {/if}
     {/if}
 </div>
